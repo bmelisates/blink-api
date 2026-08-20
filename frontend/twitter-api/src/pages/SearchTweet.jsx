@@ -69,7 +69,8 @@ function SearchTweet() {
 
   const handleDeleteComment = async (commentId, parentTweetId, isRetweet) => {
     try {
-      await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+      const result = await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+      if (!result?.isTopLevelComment) return
       setTweetSearchResults(prev => prev.map(t => t.id === parentTweetId ? { ...t, comments: (t.comments || 1) - 1 } : t))
     } catch (error) {
       console.error('Error deleting comment (search wrapper):', error)

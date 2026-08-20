@@ -238,10 +238,23 @@ function Home() {
   const handleReply = async (tweetId, replyContent, isRetweet) => {
     const reply = await tweetCard.handleReply(tweetId, replyContent, isRetweet)
     if (reply) {
-      setTweets(prev => prev.map(tweet => tweet.id === tweetId
-        ? { ...tweet, comments: (tweet.comments || 0) + 1 }
-        : tweet
-      ))
+      const feedReply = {
+        ...reply,
+        user: reply.username || 'unknown',
+        name: reply.username || 'Unknown',
+        isRetweet: false,
+        parentTweetId: reply.parentTweetId || tweetId
+      }
+
+      setTweets(prev => [
+        feedReply,
+        ...prev
+          .filter(tweet => tweet.id !== reply.id)
+          .map(tweet => tweet.id === tweetId
+            ? { ...tweet, comments: (tweet.comments || 0) + 1 }
+            : tweet
+          )
+      ])
       setRetweets(prev => prev.map(retweet => retweet.id === tweetId
         ? { ...retweet, comments: (retweet.comments || 0) + 1 }
         : retweet
@@ -251,7 +264,15 @@ function Home() {
   }
 
   const handleDeleteComment = async (commentId, parentTweetId, isRetweet) => {
-    await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+    const result = await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+    if (!result?.deleted) return
+
+    // Child tweet ana akışta da gösterildiği için iki görünümden aynı anda kaldır.
+    setTweets(prev => prev.filter(tweet => tweet.id !== commentId))
+    setRetweets(prev => prev.filter(tweet => tweet.id !== commentId))
+
+    if (!result.isTopLevelComment) return
+
     setTweets(prev => prev.map(tweet => tweet.id === parentTweetId
       ? { ...tweet, comments: Math.max(0, (tweet.comments || 0) - 1) }
       : tweet
@@ -316,9 +337,30 @@ function Home() {
   // Seçilen tweet'i sistemden tamamen siler
   const handleDelete = async (tweetId) => {
     try {
+      const deletedTweet = [...tweets, ...retweets].find(tweet => tweet.id === tweetId)
+      const parentTweet = deletedTweet?.parentTweetId
+        ? [...tweets, ...retweets].find(tweet => tweet.id === deletedTweet.parentTweetId)
+        : null
       await api.delete(`/tweets/${tweetId}`)
-      setTweets(tweets.filter(t => t.id !== tweetId))
-      setRetweets(retweets.filter(r => r.id !== tweetId))
+      setTweets(prev => prev.filter(tweet => tweet.id !== tweetId))
+      setRetweets(prev => prev.filter(tweet => tweet.id !== tweetId))
+
+      if (deletedTweet?.parentTweetId) {
+        const result = tweetCard.removeCommentFromState(tweetId)
+        // Yorum paneli açık değilken de bağımsız akıştaki child tweetin
+        // doğrudan bir ana tweete ait olup olmadığını kontrol ederiz.
+        const isDirectReply = !parentTweet?.parentTweetId
+        if (result.isTopLevelComment || isDirectReply) {
+          setTweets(prev => prev.map(tweet => tweet.id === deletedTweet.parentTweetId
+            ? { ...tweet, comments: Math.max(0, (tweet.comments || 0) - 1) }
+            : tweet
+          ))
+          setRetweets(prev => prev.map(tweet => tweet.id === deletedTweet.parentTweetId
+            ? { ...tweet, comments: Math.max(0, (tweet.comments || 0) - 1) }
+            : tweet
+          ))
+        }
+      }
     } catch (error) {
       console.error('Error deleting tweet:', error)
     }
@@ -388,7 +430,9 @@ function Home() {
         {/* Tweetlerin listelendiği akış alanı */}
         <div className="tweets-feed">
           <TweetList
-            items={[...retweets, ...tweets]}
+            items={[...retweets, ...tweets].sort(
+              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            )}
             currentUserId={currentUserId}
             tweetCard={tweetCard}
             handlers={{

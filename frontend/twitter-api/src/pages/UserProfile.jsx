@@ -141,6 +141,31 @@ function UserProfile() {
     setEditContent('')
   }
 
+  const handleLike = async (tweetId) => {
+    const tweet = [...tweets, ...retweets].find(item => item.id === tweetId)
+    if (!tweet) return
+
+    const wasLiked = tweet.isLiked
+    const updateLike = item => item.id === tweetId
+      ? { ...item, isLiked: !wasLiked, likes: Math.max(0, (item.likes || 0) + (wasLiked ? -1 : 1)) }
+      : item
+
+    setTweets(prev => prev.map(updateLike))
+    setRetweets(prev => prev.map(updateLike))
+
+    try {
+      if (wasLiked) {
+        await api.delete(`/likes/tweet/${tweetId}`)
+      } else {
+        await api.post('/likes', { tweetId })
+      }
+    } catch (error) {
+      setTweets(prev => prev.map(item => item.id === tweetId ? tweet : item))
+      setRetweets(prev => prev.map(item => item.id === tweetId ? tweet : item))
+      console.error('Error handling like (user profile):', error)
+    }
+  }
+
   const handleReply = async (tweetId, replyContent, isRetweet) => {
     try {
       const reply = await tweetCard.handleReply(tweetId, replyContent, isRetweet)
@@ -154,7 +179,8 @@ function UserProfile() {
 
   const handleDeleteComment = async (commentId, parentTweetId, isRetweet) => {
     try {
-      await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+      const result = await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+      if (!result?.isTopLevelComment) return
       setTweets(prev => prev.map(t => t.id === parentTweetId ? { ...t, comments: (t.comments || 1) - 1 } : t))
       setRetweets(prev => prev.map(r => r.id === parentTweetId ? { ...r, comments: (r.comments || 1) - 1 } : r))
     } catch (error) {
@@ -233,12 +259,14 @@ function UserProfile() {
 
         {/* Tweets */}
         <div className="profile-tweets">
-          {[...retweets, ...tweets].map(tweet => (
+          {[...retweets, ...tweets]
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+            .map(tweet => (
             <TweetCard
-              key={tweet.id}
+              key={`${tweet.isRetweet ? 'retweet' : 'tweet'}-${tweet.id}`}
               tweet={tweet}
               currentUserId={currentUserId}
-              onLike={tweetCard.handleLike}
+              onLike={handleLike}
               onRetweet={tweetCard.handleRetweet}
               onEdit={handleEdit}
               onToggleLikes={tweetCard.handleToggleLikes}

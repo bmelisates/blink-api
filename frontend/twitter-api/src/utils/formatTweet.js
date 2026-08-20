@@ -25,7 +25,7 @@ export const formatTweet = (tweet) => ({
   parent: buildParent(tweet.parentTweet) || buildParent(tweet.parent),
   createdAt: tweet.createdAt,
   time: tweet.time || 'now',
-  isLiked: false,
+  isLiked: tweet.likedByCurrentUser || false,
   isRetweet: false
 })
 
@@ -56,6 +56,7 @@ export const formatRetweet = (retweet) => ({
   parentTweetId: retweet.tweet?.parentTweetId || retweet.tweet?.parentId || retweet.tweet?.parent_id || retweet.tweet?.parent?.id || null,
   createdAt: retweet.createdAt || retweet.tweet?.createdAt,
   time: 'now',
+  isLiked: retweet.tweet?.likedByCurrentUser || false,
   isRetweeted: true,
   isRetweet: true,
   retweetedBy: retweet.user?.username || 'unknown',

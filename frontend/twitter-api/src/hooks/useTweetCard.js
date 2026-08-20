@@ -172,6 +172,8 @@ export const useTweetCard = () => {
         comments: data.replyCount || 0,
         isLiked: false,
         isRetweeted: false,
+        parentTweetId: data.parentTweetId || tweetId,
+        createdAt: data.createdAt || new Date().toISOString(),
         replies: [],
         expanded: false,
         showLikes: false,
@@ -197,6 +199,40 @@ export const useTweetCard = () => {
     } catch (error) {
       console.error('Error creating reply:', error)
     }
+  }
+
+  // Bir child tweet ana akıştan silindiğinde de açık yorum panellerini
+  // güncel tutmak için, onu tüm yorum state'lerinden temizler.
+  const removeCommentFromState = (commentId) => {
+    const isTopLevelComment = Object.values(commentsIndex)
+      .some(ids => ids.some(id => String(id) === String(commentId)))
+
+    setCommentsIndex(prev => Object.fromEntries(
+      Object.entries(prev).map(([key, ids]) => [
+        key,
+        ids.filter(id => String(id) !== String(commentId))
+      ])
+    ))
+
+    setCommentsData(prev => {
+      const next = { ...prev }
+      delete next[commentId]
+
+      Object.keys(next).forEach(id => {
+        const comment = next[id]
+        if ((comment.replies || []).some(replyId => String(replyId) === String(commentId))) {
+          next[id] = {
+            ...comment,
+            replies: comment.replies.filter(replyId => String(replyId) !== String(commentId)),
+            comments: Math.max(0, (comment.comments || 0) - 1)
+          }
+        }
+      })
+
+      return next
+    })
+
+    return { isTopLevelComment }
   }
 
   // Tweetin altındaki yorumları açıp kapatır ve API'den getirir
@@ -262,22 +298,14 @@ export const useTweetCard = () => {
   }
 
   // Belirli bir yorumu silme fonksiyonu
-  const handleDeleteComment = async (commentId, parentTweetId, isRetweet) => {
+  const handleDeleteComment = async (commentId) => {
     try {
       await api.delete(`/tweets/${commentId}`)
 
-      const stateKey = isRetweet ? `retweet_${parentTweetId}` : parentTweetId
-
-      // Silinen yorumu index listesinden çıkar
-      const updatedComments = (commentsIndex[stateKey] || []).filter(id => id !== commentId)
-      setCommentsIndex(prev => ({ ...prev, [stateKey]: updatedComments }))
-
-      // Yorum verisini hafızadan sil
-      const newCommentsData = { ...commentsData }
-      delete newCommentsData[commentId]
-      setCommentsData(newCommentsData)
+      return { deleted: true, ...removeCommentFromState(commentId) }
     } catch (error) {
       console.error('Error deleting comment:', error)
+      return { deleted: false, isTopLevelComment: false }
     }
   }
 
@@ -678,6 +706,7 @@ export const useTweetCard = () => {
     handleReply,
     handleToggleComments,
     handleDeleteComment,
+    removeCommentFromState,
     handleCommentLike,
     handleCommentRetweet,
     handleCommentReply,

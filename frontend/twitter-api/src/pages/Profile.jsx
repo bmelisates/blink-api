@@ -88,6 +88,29 @@ function Profile() {
     setEditContent('')
   }
 
+  const handleLike = async (tweetId) => {
+    const tweet = tweets.find(item => item.id === tweetId)
+    if (!tweet) return
+
+    const wasLiked = tweet.isLiked
+    const updateLike = item => item.id === tweetId
+      ? { ...item, isLiked: !wasLiked, likes: Math.max(0, (item.likes || 0) + (wasLiked ? -1 : 1)) }
+      : item
+
+    setTweets(prev => prev.map(updateLike))
+
+    try {
+      if (wasLiked) {
+        await api.delete(`/likes/tweet/${tweetId}`)
+      } else {
+        await api.post('/likes', { tweetId })
+      }
+    } catch (error) {
+      setTweets(prev => prev.map(item => item.id === tweetId ? tweet : item))
+      console.error('Error handling like (profile):', error)
+    }
+  }
+
   const handleReply = async (tweetId, replyContent, isRetweet) => {
     try {
       const reply = await tweetCard.handleReply(tweetId, replyContent, isRetweet)
@@ -100,7 +123,8 @@ function Profile() {
 
   const handleDeleteComment = async (commentId, parentTweetId, isRetweet) => {
     try {
-      await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+      const result = await tweetCard.handleDeleteComment(commentId, parentTweetId, isRetweet)
+      if (!result?.isTopLevelComment) return
       setTweets(prev => prev.map(t => t.id === parentTweetId ? { ...t, comments: (t.comments || 1) - 1 } : t))
     } catch (error) {
       console.error('Error deleting comment (profile wrapper):', error)
@@ -179,7 +203,7 @@ function Profile() {
               key={tweet.id}
               tweet={tweet}
               currentUserId={currentUserId}
-              onLike={tweetCard.handleLike}
+              onLike={handleLike}
               onRetweet={tweetCard.handleRetweet}
               onDelete={handleDelete}
               onEdit={handleEdit}
