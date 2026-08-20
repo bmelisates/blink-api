@@ -1,0 +1,106 @@
+.tweet-search-container {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tweet-search-input {
+  width: 100%;
+  padding: 12px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: var(--color-bg);
+}
+
+.tweet-search-input:focus {
+  border-color: var(--color-accent-2);
+  background: var(--color-bg);
+}
+
+.tweet-search-input::placeholder {
+  color: var(--color-muted);
+}
+
+.tweet-search-results {
+  background: var(--color-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  margin-top: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+}
+
+.tweet-search-item {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--color-soft);
+  transition: background 0.2s ease;
+}
+
+.tweet-search-item:hover {
+  background: linear-gradient(135deg, var(--color-accent-soft-start), var(--color-accent-soft-end));
+}
+
+.tweet-search-item:last-child {
+  border-bottom: none;
+}
+
+.tweet-search-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tweet-search-name {
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.tweet-search-name:hover {
+  color: var(--color-accent-2);
+  text-decoration: underline;
+}
+
+.tweet-search-user {
+  color: var(--color-muted);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.tweet-search-user:hover {
+  color: var(--color-accent-2);
+  text-decoration: underline;
+}
+
+.tweet-search-time {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.tweet-search-text {
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.tweet-search-actions {
+  display: flex;
+  gap: 20px;
+}
+
+.tweet-search-action {
+  font-size: 14px;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.tweet-search-action:hover {
+  color: var(--color-accent-2);
+}

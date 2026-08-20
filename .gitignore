@@ -1,0 +1,7 @@
+.idea/
+.vscode/
+node_modules/
+backend/target/
+frontend/node_modules/
+frontend/twitter-api/.env
+backend/src/main/resources/application.properties

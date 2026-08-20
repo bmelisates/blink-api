@@ -1,0 +1,77 @@
+{
+  "common": {
+    "search": "Search",
+    "tweet": "Blink",
+    "reply": "Reply",
+    "retweet": "Blink",
+    "like": "Like",
+    "delete": "Delete",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "home": {
+    "tweetInput": "What's happening?",
+    "tweetButton": "Blink",
+    "searchTweet": "Search blinks",
+    "searchUser": "Search users",
+    "followSuggestions": "Follow Suggestions"
+  },
+  "tweet": {
+    "retweeted": "blinked",
+    "replies": "Replies:",
+    "replyPlaceholder": "Write a reply...",
+    "likers": "Likers",
+    "retweeters": "Blinkers"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "loginTitle": "Login",
+    "registerTitle": "Register",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "registerLink": "Register",
+    "loginLink": "Login",
+    "loginSubtitle": "Welcome back",
+    "registerSubtitle": "Join us and connect with the world",
+    "usernamePlaceholder": "@username",
+    "emailPlaceholder": "example@email.com",
+    "passwordPlaceholder": "Your password",
+    "passwordHint": "At least 8 characters",
+    "loginSuccess": "Login successful!",
+    "registrationSuccess": "Registration successful!",
+    "invalidCredentials": "Incorrect username or password"
+  },
+  "profile": {
+    "profile": "Profile",
+    "tweets": "Blinks",
+    "followers": "Followers",
+    "following": "Following",
+    "editProfile": "Edit Profile",
+    "tweetsTab": "Blinks",
+    "repliesTab": "Replies",
+    "mediaTab": "Media",
+    "likesTab": "Likes",
+    "followingLabel": "Following",
+    "followersLabel": "Followers"
+  },
+  "sidebar": {
+    "home": "Home",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "search": {
+    "searchUser": "Search users",
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow",
+    "followSuggestions": "Who to follow"
+  }
+}

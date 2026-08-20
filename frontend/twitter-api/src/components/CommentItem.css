@@ -1,0 +1,230 @@
+.comment-item {
+  padding: 10px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.comment-user {
+  color: var(--color-accent-2);
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.comment-user:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.comment-text {
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.comment-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 2px;
+}
+
+.comment-delete-btn:hover {
+  opacity: 1;
+}
+
+.comment-owner-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.comment-edit-form textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  resize: vertical;
+}
+
+.comment-edit-form button {
+  margin: 6px 6px 0 0;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.comment-action-btn.retweet.retweeted {
+  color: #0056b3;
+  font-weight: 600;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.comment-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-muted);
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comment-action-btn:hover {
+  background: var(--color-soft);
+}
+
+.comment-action-btn.like:hover {
+  color: var(--color-accent);
+}
+
+.comment-action-btn.like.liked {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.comment-action-btn.retweet:hover {
+  color: #0056b3 !important;
+  background: rgba(0, 86, 179, 0.15);
+}
+
+.comment-action-btn.reply:hover {
+  color: var(--color-accent-2);
+}
+
+.nested-replies {
+  margin-top: 12px;
+  padding-left: 20px;
+  border-left: 2px solid var(--color-border);
+}
+
+.comment-reply-form {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.comment-reply-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: inherit;
+  resize: none;
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 60px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.comment-reply-input:focus {
+  border-color: var(--color-accent-2);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.1);
+}
+
+.comment-reply-input::placeholder {
+  color: var(--color-muted);
+}
+
+.comment-reply-btn {
+  margin-top: 6px;
+  padding: 6px 16px;
+  background: linear-gradient(135deg, var(--color-accent-2), var(--color-primary));
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  float: right;
+}
+
+.comment-reply-btn:hover {
+  background: linear-gradient(135deg, var(--color-primary-2), var(--color-primary-3));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.comment-action-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.comment-action-btn.show-list {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.comment-list {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.comment-list-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.comment-list-item {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--color-soft);
+}
+
+.comment-list-item:last-child {
+  border-bottom: none;
+}
+
+.comment-list-user {
+  color: var(--color-accent-2);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.comment-list-user:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.comment-list-text {
+  color: var(--color-text);
+  font-size: 13px;
+}

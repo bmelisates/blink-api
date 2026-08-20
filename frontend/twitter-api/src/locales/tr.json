@@ -1,0 +1,77 @@
+{
+  "common": {
+    "search": "Ara",
+    "tweet": "Blinkle",
+    "reply": "Yanıtla",
+    "retweet": "Blinkle",
+    "like": "Beğen",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "success": "Başarılı"
+  },
+  "home": {
+    "tweetInput": "Neler oluyor?",
+    "tweetButton": "Blinkle",
+    "searchTweet": "Blink ara",
+    "searchUser": "Kullanıcı ara",
+    "followSuggestions": "Takip Önerileri"
+  },
+  "tweet": {
+    "retweeted": "blinkledi",
+    "replies": "Yanıtlar:",
+    "replyPlaceholder": "Yanıt yaz...",
+    "likers": "Beğenenler",
+    "retweeters": "Blinkleyenler"
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "email": "E-posta",
+    "username": "Kullanıcı Adı",
+    "password": "Şifre",
+    "loginTitle": "Giriş Yap",
+    "registerTitle": "Kayıt Ol",
+    "noAccount": "Hesabın yok mu?",
+    "hasAccount": "Zaten hesabın var mı?",
+    "registerLink": "Kayıt Ol",
+    "loginLink": "Giriş Yap",
+    "loginSubtitle": "Tekrar hoş geldin",
+    "registerSubtitle": "Aramıza katıl, dünyayla bağlantı kur",
+    "usernamePlaceholder": "@kullaniciadi",
+    "emailPlaceholder": "ornek@email.com",
+    "passwordPlaceholder": "Şifreniz",
+    "passwordHint": "En az 8 karakter",
+    "loginSuccess": "Giriş başarılı!",
+    "registrationSuccess": "Kayıt başarılı!",
+    "invalidCredentials": "Kullanıcı adı veya şifre yanlış"
+  },
+  "profile": {
+    "profile": "Profil",
+    "tweets": "Blinkler",
+    "followers": "Takipçiler",
+    "following": "Takip Edilenler",
+    "editProfile": "Profili Düzenle",
+    "tweetsTab": "Blinkler",
+    "repliesTab": "Yanıtlar",
+    "mediaTab": "Medya",
+    "likesTab": "Beğeniler",
+    "followingLabel": "Takip edilen",
+    "followersLabel": "Takipçi"
+  },
+  "sidebar": {
+    "home": "Ana Sayfa",
+    "profile": "Profil",
+    "logout": "Çıkış Yap"
+  },
+  "search": {
+    "searchUser": "Kullanıcı ara",
+    "follow": "Takip Et",
+    "following": "Takip Ediliyor",
+    "unfollow": "Takibi Bırak",
+    "followSuggestions": "Kimi Takip Etmeli"
+  }
+}
