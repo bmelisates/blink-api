@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import './Register.css'
@@ -20,13 +19,24 @@ function Register() {
   const handleSubmit = (e) => {
     e.preventDefault()
     api.post('/users/register', formData)
-      .then(response => {
-        console.log('User registered:', response.data)
+      .then(() => {
         toast.success(t('auth.registrationSuccess'))
         navigate('/login')
       })
       .catch(error => {
         console.error('Error registering user:', error)
+
+        const errorMessage = error.response?.data?.message?.toLowerCase() || ''
+
+        if (error.response?.status === 409 && errorMessage.includes('username')) {
+          toast.error(t('auth.usernameAlreadyExists'))
+        } else if (error.response?.status === 409 && errorMessage.includes('email')) {
+          toast.error(t('auth.emailAlreadyExists'))
+        } else if (!error.response) {
+          toast.error(t('auth.connectionError'))
+        } else {
+          toast.error(error.response?.data?.message || t('auth.registrationFailed'))
+        }
       })
   }
 

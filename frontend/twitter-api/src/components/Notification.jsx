@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import './Notification.css'
 
 function Notification({ message, type, onClose }) {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    setVisible(true)
     const timer = setTimeout(() => {
       setVisible(false)
       setTimeout(onClose, 300)

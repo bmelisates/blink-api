@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import './Login.css'
@@ -26,7 +25,6 @@ function Login() {
     // Backende login isteği gönderiyoruz.
     api.post('/auth/login', formData)
       .then(response => {
-        console.log('User logged in:', response.data)
 
         // Backendten gelen Token ve userId'yi localStorage'a kaydediyoruz.
         localStorage.setItem('token', response.data.token)

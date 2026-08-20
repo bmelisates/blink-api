@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import './FollowSuggestions.css'
 import api from '../services/api'
 import UserLink from '../components/UserLink'

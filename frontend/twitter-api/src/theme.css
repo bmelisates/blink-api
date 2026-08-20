@@ -11,6 +11,14 @@
   --color-accent-soft-start: #fbcfe8;
   --color-accent-soft-end: #e9d5ff;
   --color-accent-fade: #d1fae5;
+  --color-page-start: var(--color-accent-soft-start);
+  --color-page-middle: var(--color-accent-soft-end);
+  --color-page-end: var(--color-bg-accent);
+  --color-nav-hover-start: var(--color-accent-soft-start);
+  --color-nav-hover-end: var(--color-accent-soft-end);
+  --color-nav-active-start: var(--color-accent);
+  --color-nav-active-middle: var(--color-accent-2);
+  --color-nav-active-end: var(--color-primary);
   --color-tweet-hover-start: #ffb6d9; /* stronger soft pink */
   --color-tweet-hover-end: #ff9adf;   /* stronger pink */
   --color-bg-accent: #a7f3d0;
@@ -22,6 +30,8 @@
   --color-retweet: #0f766e; /* darker green-blue */
   --color-retweet-hover: #0056b3;
   --color-retweet-bg: rgba(0, 86, 179, 0.15);
+  --color-retweet-glow: rgba(0, 86, 179, 0.5);
+  --color-focus-ring: rgba(168, 85, 247, 0.1);
   --color-success-2: #059669;
   --color-danger: #ef4444;
   --color-foreground: #ffffff;
@@ -52,31 +62,48 @@
 
 /* Dark theme (activate by setting data-theme="dark" on <html> or <body>) */
 [data-theme="dark"]{
-  --color-bg: #001e42;
-  --color-surface: rgba(74, 67, 71, 0.8);
-  --color-primary: #5b21b6; /* deep purple */
-  --color-primary-2: #45258a;
-  --color-primary-3: #0f1724; /* near-navy */
-  --color-accent: #c084fc;
-  --color-accent-2: #a78bfa;
-  --color-accent-3: #34d399;
-  --color-accent-soft-start: #6d28d9;
-  --color-accent-soft-end: var(--color-primary-3);
-  --color-tweet-hover-start: rgba(255,182,217,0.14); /* dark: stronger pink translucent */
-  --color-tweet-hover-end: rgba(255,154,223,0.10);   /* dark: stronger pink translucent */
-  --color-accent-fade: rgba(209,250,229,0.04);
-  --color-bg-accent: var(--color-primary-3);
-  --color-muted: #9aa4b2;
-  --color-text: #e6e6f0;
-  --color-border: rgba(255,255,255,0.06);
-  --color-soft: rgba(255,255,255,0.02);
-  --color-success: #34d399;
-  --color-success-2: #10b981;
-  --color-danger: #f87171;
-  --color-foreground: #0b1020;
-  --color-retweet: var(--color-text);
-  --color-retweet-hover: #0056b3;
-  --color-retweet-bg: rgba(0, 86, 179, 0.2);
-  --shadow-soft: 0 6px 20px rgba(2,6,23,0.6);
+  color-scheme: dark;
+  --color-bg: #202742;
+  --color-surface: rgba(39, 43, 68, 0.94);
+  --color-primary: #9b78ed;
+  --color-primary-2: #795fd0;
+  --color-primary-3: #5267bd;
+  --color-accent: #f18ab9;
+  --color-accent-2: #ad8bea;
+  --color-accent-3: #68afe8;
+  --color-accent-soft-start: rgba(241, 138, 185, 0.13);
+  --color-accent-soft-end: rgba(104, 175, 232, 0.13);
+  --color-page-start: #3a1f4d;
+  --color-page-middle: #281d43;
+  --color-page-end: #1e2848;
+  --color-nav-hover-start: rgba(241, 138, 185, 0.14);
+  --color-nav-hover-end: rgba(104, 175, 232, 0.18);
+  --color-nav-active-start: #f052a5;
+  --color-nav-active-middle: #9b5de5;
+  --color-nav-active-end: #438ee8;
+  --color-tweet-hover-start: rgba(240, 140, 189, 0.09);
+  --color-tweet-hover-end: rgba(120, 188, 237, 0.09);
+  --color-accent-fade: rgba(120, 188, 237, 0.08);
+  --color-bg-accent: #263858;
+  --color-muted: #b8bed1;
+  --color-text: #f0eff7;
+  --color-border: rgba(158, 181, 225, 0.22);
+  --color-soft: rgba(104, 175, 232, 0.09);
+  --color-success: #68afe8;
+  --color-success-2: #4b91ce;
+  --color-danger: #f28b98;
+  --color-foreground: #fcfaff;
+  --color-retweet: #68afe8;
+  --color-retweet-hover: #a9d7f7;
+  --color-retweet-bg: rgba(104, 175, 232, 0.14);
+  --color-retweet-glow: rgba(104, 175, 232, 0.3);
+  --color-focus-ring: rgba(104, 175, 232, 0.22);
+  --shadow-soft: 0 8px 28px rgba(13, 18, 39, 0.3);
+  --shadow-md: 0 10px 32px rgba(13, 18, 39, 0.38);
+}
+
+[data-theme="dark"] ::selection {
+  background: rgba(240, 140, 189, 0.3);
+  color: var(--color-foreground);
 }
 

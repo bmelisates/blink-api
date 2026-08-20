@@ -6,35 +6,30 @@ import UserList from './UserList'
 import ReplyForm from './ReplyForm'
 import { useTranslation } from '../hooks/useTranslation'
 import { formatRelativeTime } from '../utils/formatRelativeTime'
+import { useCurrentTime } from '../contexts/TimeContext'
 import './TweetCard.css'
 
-function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, onToggleLikes, onToggleRetweets, expandedLikes, expandedRetweets, likesUsers, retweetsUsers, onReply, showReplyForm, onToggleReplyForm, onToggleComments, expandedComments, commentsIndex, onDeleteComment, onCommentLike, onCommentRetweet, onCommentReply, onEditComment, onToggleCommentReplies, onToggleCommentLikes, onToggleCommentRetweets, onToggleCommentComments, commentsData, onTweetClick }) {
+function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, onToggleLikes, onToggleRetweets, openPanels, likesUsers, retweetsUsers, onReply, onToggleReplyForm, onToggleComments, commentsIndex, onDeleteComment, onCommentLike, onCommentRetweet, onCommentReply, onEditComment, onToggleCommentReplies, onToggleCommentLikes, onToggleCommentRetweets, onToggleCommentComments, commentsData, onTweetClick }) {
   // Retweet için farklı state key kullan
   const stateKey = tweet.isRetweet ? `retweet_${tweet.id}` : tweet.id
+  const openPanel = openPanels[stateKey]
 
-  const [parentTweet, setParentTweet] = useState(tweet.parent || null)
-  const [currentTime, setCurrentTime] = useState(() => Date.now())
+  const [fetchedParentTweet, setFetchedParentTweet] = useState(null)
+  const parentTweet = tweet.parent || fetchedParentTweet
+  const currentTime = useCurrentTime()
   const { t, language } = useTranslation()
   const relativeTime = formatRelativeTime(tweet.createdAt, language, currentTime) || tweet.time || (language === 'tr' ? 'şimdi' : 'now')
 
   useEffect(() => {
-    const intervalId = setInterval(() => setCurrentTime(Date.now()), 60_000)
-    return () => clearInterval(intervalId)
-  }, [])
-
-  useEffect(() => {
     // Normalize provided parent or fetch when only id is available. Keep deps minimal to avoid loops.
-    if (tweet.parent) {
-      setParentTweet(tweet.parent)
-      return
-    }
+    if (tweet.parent) return
 
-    const parentId = tweet.parentTweetId || tweet.parentId || tweet.parent_id || tweet.parent?.id || null
-    if (parentId && !parentTweet) {
+    const parentId = tweet.parentTweetId || tweet.parentId || tweet.parent_id || null
+    if (parentId) {
       api.get(`/tweets/${parentId}`)
         .then(response => {
           const p = response.data
-          setParentTweet({
+          setFetchedParentTweet({
             id: p.id,
             userId: p.user?.id || null,
             user: p.user?.username || 'unknown',
@@ -46,7 +41,7 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
           console.error('Error fetching parent tweet:', err)
         })
     }
-  }, [tweet.parent, tweet.parentTweetId])
+  }, [tweet.parent, tweet.parentTweetId, tweet.parentId, tweet.parent_id])
 
   return (
     <div
@@ -103,7 +98,7 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
                 className="action-btn show-likes"
                 onClick={() => onToggleComments(tweet.id, tweet.isRetweet)}
               >
-                {expandedComments[stateKey] ? '▲' : '▼'}
+                {openPanel === 'comments' ? '▲' : '▼'}
               </button>
             )}
           </div>
@@ -119,7 +114,7 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
                 className="action-btn show-likes"
                 onClick={() => onToggleRetweets(tweet.id, tweet.isRetweet)}
               >
-                {expandedRetweets[stateKey] ? '▲' : '▼'}
+                {openPanel === 'retweets' ? '▲' : '▼'}
               </button>
             )}
           </div>
@@ -128,14 +123,14 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
               className={`action-btn like ${tweet.isLiked ? 'liked' : ''}`}
               onClick={() => onLike(tweet.id)}
             >
-              💜 {tweet.likes}
+              💜 <span className="action-count">{tweet.likes}</span>
             </button>
             {tweet.likes > 0 && (
               <button
                 className="action-btn show-likes"
                 onClick={() => onToggleLikes(tweet.id, tweet.isRetweet)}
               >
-                {expandedLikes[stateKey] ? '▲' : '▼'}
+                {openPanel === 'likes' ? '▲' : '▼'}
               </button>
             )}
           </div>
@@ -146,13 +141,13 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
             </>
           )}
         </div>
-        {expandedLikes[stateKey] && likesUsers[stateKey] && (
+        {openPanel === 'likes' && likesUsers[stateKey] && (
           <UserList users={likesUsers[stateKey]} title="Beğenenler" className="likes-list" currentUserId={currentUserId} />
         )}
-        {expandedRetweets[stateKey] && retweetsUsers[stateKey] && (
+        {openPanel === 'retweets' && retweetsUsers[stateKey] && (
           <UserList users={retweetsUsers[stateKey]} title="Blinkleyenler" className="retweets-list" currentUserId={currentUserId} />
         )}
-        {showReplyForm[stateKey] && (
+        {openPanel === 'reply' && (
           <ReplyForm
             placeholder="Yanıt yaz..."
             onSubmit={(text) => onReply(tweet.id, text, tweet.isRetweet)}
@@ -161,7 +156,7 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
             buttonClassName="reply-btn"
           />
         )}
-        {expandedComments[stateKey] && commentsIndex[stateKey] && commentsIndex[stateKey].length > 0 && (
+        {openPanel === 'comments' && commentsIndex[stateKey] && commentsIndex[stateKey].length > 0 && (
           <div className="comments-list">
             <div className="comments-header">Yanıtlar:</div>
             {commentsIndex[stateKey].map(commentId => {

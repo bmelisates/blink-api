@@ -71,7 +71,7 @@
 }
 
 .comment-action-btn.retweet.retweeted {
-  color: #0056b3;
+  color: var(--color-retweet-hover);
   font-weight: 600;
 }
 
@@ -109,9 +109,14 @@
   font-weight: 600;
 }
 
+.comment-action-btn .action-count {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
 .comment-action-btn.retweet:hover {
-  color: #0056b3 !important;
-  background: rgba(0, 86, 179, 0.15);
+  color: var(--color-retweet-hover) !important;
+  background: var(--color-retweet-bg);
 }
 
 .comment-action-btn.reply:hover {
@@ -149,7 +154,7 @@
 
 .comment-reply-input:focus {
   border-color: var(--color-accent-2);
-  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.1);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 .comment-reply-input::placeholder {

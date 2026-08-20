@@ -85,7 +85,7 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
             className={`comment-action-btn like ${comment.isLiked ? 'liked' : ''}`}
             onClick={() => onLike(comment.id)}
           >
-            💜 {comment.likes || 0}
+            💜 <span className="action-count">{comment.likes || 0}</span>
           </button>
           {comment.likes > 0 && (
             <button

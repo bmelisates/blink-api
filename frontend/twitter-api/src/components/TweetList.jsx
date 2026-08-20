@@ -1,4 +1,3 @@
-import React from 'react'
 import TweetCard from './TweetCard'
 
 export default function TweetList({ items = [], currentUserId, tweetCard, handlers = {}, onTweetClick }) {
@@ -17,15 +16,12 @@ export default function TweetList({ items = [], currentUserId, tweetCard, handle
           onEdit={handlers.onEdit}
           onToggleLikes={tweetCard.handleToggleLikes}
           onToggleRetweets={tweetCard.handleToggleRetweets}
-          expandedLikes={tweetCard.expandedLikes}
-          expandedRetweets={tweetCard.expandedRetweets}
+          openPanels={tweetCard.openPanels}
           likesUsers={tweetCard.likesUsers}
           retweetsUsers={tweetCard.retweetsUsers}
           onReply={handlers.onReply || tweetCard.handleReply}
-          showReplyForm={tweetCard.showReplyForm}
           onToggleReplyForm={tweetCard.handleToggleReplyForm}
           onToggleComments={handlers.onToggleComments || tweetCard.handleToggleComments}
-          expandedComments={tweetCard.expandedComments}
           commentsIndex={tweetCard.commentsIndex}
           onDeleteComment={handlers.onDeleteComment || tweetCard.handleDeleteComment}
           onCommentLike={tweetCard.handleCommentLike}

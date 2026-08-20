@@ -1,49 +1,14 @@
-import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './SearchUser.css'
-import api from '../services/api'
 import { useTranslation } from '../hooks/useTranslation'
+import useClickOutside from '../hooks/useClickOutside'
+import useSearch from '../hooks/useSearch'
 
 function SearchUser() {
-  const [userSearchTerm, setUserSearchTerm] = useState('')
-  const [userSearchResults, setUserSearchResults] = useState([])
-  const searchContainerRef = useRef(null)
+  const userSearch = useSearch('/users/search')
+  const searchContainerRef = useClickOutside(userSearch.clearResults)
   const currentUserId = localStorage.getItem('userId')
   const { t } = useTranslation()
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
-        setUserSearchResults([])
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const searchUsers = async () => {
-    console.log('Search called with term:', userSearchTerm)
-    if (!userSearchTerm.trim()) {
-      setUserSearchResults([])
-      return
-    }
-
-    try {
-      console.log('Making API call to:', `/users/search?keyword=${userSearchTerm}`)
-      const response = await api.get(
-        `/users/search?keyword=${userSearchTerm}`
-      )
-      console.log('Search response:', response.data)
-      console.log('Setting search results:', response.data)
-      setUserSearchResults(response.data)
-    } catch (error) {
-      console.error('Error searching users:', error)
-      setUserSearchResults([])
-    }
-  }
 
   return (
     <div className="search-bar" ref={searchContainerRef}>
@@ -51,17 +16,17 @@ function SearchUser() {
         type="text"
         placeholder={t('search.searchUser')}
         className="search-input"
-        value={userSearchTerm}
-        onChange={(e) => setUserSearchTerm(e.target.value)}
+        value={userSearch.term}
+        onChange={(e) => userSearch.setTerm(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
-            searchUsers()
+            userSearch.search()
           }
         }}
       />
-      {userSearchResults.length > 0 && (
+      {userSearch.results.length > 0 && (
         <div className="search-results">
-          {userSearchResults.map((user) => (
+          {userSearch.results.map((user) => (
             <Link
               key={user.id}
               to={String(user.id) === String(currentUserId) ? '/profile' : `/user/${user.id}`}

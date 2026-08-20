@@ -1,4 +1,3 @@
-import React from 'react'
 import './EditTweetModal.css'
 
 export default function EditTweetModal({ editingTweet, editContent, setEditContent, onCancel, onSave }) {

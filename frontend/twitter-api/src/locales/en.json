@@ -47,6 +47,10 @@
     "passwordHint": "At least 8 characters",
     "loginSuccess": "Login successful!",
     "registrationSuccess": "Registration successful!",
+    "usernameAlreadyExists": "This username is already in use.",
+    "emailAlreadyExists": "A user with this email address already exists.",
+    "registrationFailed": "Registration failed. Please try again.",
+    "connectionError": "Could not reach the server. Please check your connection.",
     "invalidCredentials": "Incorrect username or password"
   },
   "profile": {

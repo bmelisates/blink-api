@@ -5,25 +5,13 @@ export const useTweetCard = () => {
   // ==================== STATE (DURUM) TANIMLAMALARI ====================
 
   // Hangi tweetin beğenilenler, retweetler veya yorum pencerelerinin açık olduğunu tutan state'ler
-  const [expandedLikes, setExpandedLikes] = useState({})
+  const [openPanels, setOpenPanels] = useState({})
   const [likesUsers, setLikesUsers] = useState({})
-  const [expandedRetweets, setExpandedRetweets] = useState({})
   const [retweetsUsers, setRetweetsUsers] = useState({})
-  const [showReplyForm, setShowReplyForm] = useState({})
 
   // Yorumlar ile ilgili state'ler
-  const [expandedComments, setExpandedComments] = useState({})
   const [commentsIndex, setCommentsIndex] = useState({}) // stateKey -> yorum ID'lerinin dizisi (eşleme haritası)
   const [commentsData, setCommentsData] = useState({}) // Yorum detay verileri
-
-  // İç içe yanıtlar (comment replies) ve derin etkileşimler için state'ler
-  const [expandedCommentReplies, setExpandedCommentReplies] = useState({})
-  const [commentReplies, setCommentReplies] = useState({})
-  const [expandedCommentLikes, setExpandedCommentLikes] = useState({})
-  const [commentLikesUsers, setCommentLikesUsers] = useState({})
-  const [expandedCommentRetweets, setExpandedCommentRetweets] = useState({})
-  const [commentRetweetsUsers, setCommentRetweetsUsers] = useState({})
-  const [expandedCommentComments, setExpandedCommentComments] = useState({})
 
   // Giriş yapmış olan kullanıcının ID'sini localStorage'dan güvenli bir şekilde alıyoruz
   const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null
@@ -38,9 +26,7 @@ export const useTweetCard = () => {
   // ==================== BEĞENİ VE RETWEET İŞLEMLERİ ====================
 
   // Tweet veya retweet beğenme / beğeniyi geri alma (Unlike) fonksiyonu
-  const handleLike = async (tweetId, isRetweet) => {
-    const stateKey = isRetweet ? `retweet_${tweetId}` : tweetId
-
+  const handleLike = async (tweetId) => {
     try {
       // Önce backend'den bu tweetin daha önce beğenilip beğenilmediğini kontrol et
       const likesResponse = await api.get(`/likes/tweet/${tweetId}`)
@@ -70,13 +56,16 @@ export const useTweetCard = () => {
         const userRetweet = retweetsResponse.data.find(r => r.user?.id === parseInt(currentUserId || '0'))
         if (userRetweet) {
           await api.delete(`/retweets/${userRetweet.id}`)
+          return { action: 'removed' }
         }
       } else {
         // Retweet edilmemişse yeni retweet ekle (Post)
         await api.post('/retweets', { tweetId })
+        return { action: 'created' }
       }
     } catch (error) {
       console.error('Error handling retweet:', error)
+      return { action: 'failed' }
     }
   }
 
@@ -86,15 +75,12 @@ export const useTweetCard = () => {
   const handleToggleLikes = async (tweetId, isRetweet) => {
     const stateKey = isRetweet ? `retweet_${tweetId}` : tweetId
 
-    if (expandedLikes[stateKey]) {
+    if (openPanels[stateKey] === 'likes') {
       // Zaten açıksa kapat
-      setExpandedLikes(prev => ({ ...prev, [stateKey]: false }))
+      setOpenPanels(prev => ({ ...prev, [stateKey]: null }))
     } else {
       // Diğer pencereleri kapatıp sadece beğeniler panelini aç
-      setExpandedRetweets(prev => ({ ...prev, [stateKey]: false }))
-      setExpandedComments(prev => ({ ...prev, [stateKey]: false }))
-      setShowReplyForm(prev => ({ ...prev, [stateKey]: false }))
-      setExpandedLikes(prev => ({ ...prev, [stateKey]: true }))
+      setOpenPanels(prev => ({ ...prev, [stateKey]: 'likes' }))
 
       try {
         // Beğenen kullanıcıların listesini API'den çek ve kaydet
@@ -106,7 +92,7 @@ export const useTweetCard = () => {
         setLikesUsers(prev => ({ ...prev, [stateKey]: users }))
       } catch (error) {
         console.error('Error fetching likes:', error)
-        setExpandedLikes(prev => ({ ...prev, [stateKey]: false }))
+        setOpenPanels(prev => prev[stateKey] === 'likes' ? { ...prev, [stateKey]: null } : prev)
       }
     }
   }
@@ -115,14 +101,11 @@ export const useTweetCard = () => {
   const handleToggleRetweets = async (tweetId, isRetweet) => {
     const stateKey = isRetweet ? `retweet_${tweetId}` : tweetId
 
-    if (expandedRetweets[stateKey]) {
-      setExpandedRetweets(prev => ({ ...prev, [stateKey]: false }))
+    if (openPanels[stateKey] === 'retweets') {
+      setOpenPanels(prev => ({ ...prev, [stateKey]: null }))
     } else {
       // Diğer pencereleri kapat
-      setExpandedLikes(prev => ({ ...prev, [stateKey]: false }))
-      setExpandedComments(prev => ({ ...prev, [stateKey]: false }))
-      setShowReplyForm(prev => ({ ...prev, [stateKey]: false }))
-      setExpandedRetweets(prev => ({ ...prev, [stateKey]: true }))
+      setOpenPanels(prev => ({ ...prev, [stateKey]: 'retweets' }))
 
       try {
         const response = await api.get(`/retweets/tweet/${tweetId}`)
@@ -133,7 +116,7 @@ export const useTweetCard = () => {
         setRetweetsUsers(prev => ({ ...prev, [stateKey]: users }))
       } catch (error) {
         console.error('Error fetching retweets:', error)
-        setExpandedRetweets(prev => ({ ...prev, [stateKey]: false }))
+        setOpenPanels(prev => prev[stateKey] === 'retweets' ? { ...prev, [stateKey]: null } : prev)
       }
     }
   }
@@ -142,14 +125,11 @@ export const useTweetCard = () => {
   const handleToggleReplyForm = (tweetId, isRetweet) => {
     const stateKey = isRetweet ? `retweet_${tweetId}` : tweetId
 
-    if (showReplyForm[stateKey]) {
-      setShowReplyForm(prev => ({ ...prev, [stateKey]: false }))
+    if (openPanels[stateKey] === 'reply') {
+      setOpenPanels(prev => ({ ...prev, [stateKey]: null }))
     } else {
       // Çakışmayı önlemek için diğer aktif listeleri sıfırla
-      setExpandedLikes({})
-      setExpandedRetweets({})
-      setExpandedComments({})
-      setShowReplyForm(prev => ({ ...prev, [stateKey]: true }))
+      setOpenPanels({ [stateKey]: 'reply' })
     }
   }
 
@@ -189,10 +169,8 @@ export const useTweetCard = () => {
       // Yeni yorumu state verilerine ekle ve yorumlar listesinin en başına yerleştir
       setCommentsData(prev => ({ ...prev, [reply.id]: reply }))
       setCommentsIndex(prev => ({ ...prev, [stateKey]: [reply.id, ...(prev[stateKey] || [])] }))
-      setExpandedComments(prev => ({ ...prev, [stateKey]: true }))
-
-      // Gönderim sonrası yanıt formunu otomatik kapat
-      setShowReplyForm(prev => ({ ...prev, [stateKey]: false }))
+      // Gönderim sonrası yanıt formunu kapatıp yorumları göster
+      setOpenPanels(prev => ({ ...prev, [stateKey]: 'comments' }))
 
       return reply
 
@@ -239,14 +217,11 @@ export const useTweetCard = () => {
   const handleToggleComments = async (tweetId, isRetweet) => {
     const stateKey = isRetweet ? `retweet_${tweetId}` : tweetId
 
-    if (expandedComments[stateKey]) {
-      setExpandedComments(prev => ({ ...prev, [stateKey]: false }))
+    if (openPanels[stateKey] === 'comments') {
+      setOpenPanels(prev => ({ ...prev, [stateKey]: null }))
     } else {
       // Diğer pencereleri kapatıp yorumlar alanını aç
-      setExpandedLikes(prev => ({ ...prev, [stateKey]: false }))
-      setExpandedRetweets(prev => ({ ...prev, [stateKey]: false }))
-      setShowReplyForm(prev => ({ ...prev, [stateKey]: false }))
-      setExpandedComments(prev => ({ ...prev, [stateKey]: true }))
+      setOpenPanels(prev => ({ ...prev, [stateKey]: 'comments' }))
 
       try {
         const response = await api.get(`/tweets/${tweetId}/replies`)
@@ -292,7 +267,7 @@ export const useTweetCard = () => {
         setCommentsIndex(prev => ({ ...prev, [stateKey]: comments.map(c => c.id) }))
       } catch (error) {
         console.error('Error fetching comments:', error)
-        setExpandedComments(prev => ({ ...prev, [stateKey]: false }))
+        setOpenPanels(prev => prev[stateKey] === 'comments' ? { ...prev, [stateKey]: null } : prev)
       }
     }
   }
@@ -668,35 +643,17 @@ export const useTweetCard = () => {
 
   // Tüm açık pencereleri, formları ve listeleri sıfırlayarak kapatır
   const closeAll = () => {
-    setExpandedLikes({})
-    setExpandedRetweets({})
-    setShowReplyForm({})
-    setExpandedComments({})
-    setExpandedCommentReplies({})
-    setExpandedCommentLikes({})
-    setExpandedCommentRetweets({})
-    setExpandedCommentComments({})
+    setOpenPanels({})
   }
 
   // Hook dışarısından erişilebilecek state, fonksiyon ve yardımcı araçları döndürüyoruz
   return {
     // States (Durumlar)
-    expandedLikes,
+    openPanels,
     likesUsers,
-    expandedRetweets,
     retweetsUsers,
-    showReplyForm,
-    expandedComments,
     commentsIndex,
     commentsData,
-    expandedCommentReplies,
-    commentReplies,
-    expandedCommentLikes,
-    commentLikesUsers,
-    expandedCommentRetweets,
-    commentRetweetsUsers,
-    expandedCommentComments,
-
     // Handlers (İşlem Fonksiyonları)
     handleLike,
     handleRetweet,

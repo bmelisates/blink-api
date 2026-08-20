@@ -29,6 +29,29 @@
 
 .sidebar-logo {
   width: 150px;
+  position: relative;
+}
+
+.sidebar-logo-base,
+.sidebar-logo-word {
+  display: block;
+  width: 100%;
+}
+
+.sidebar-logo-word {
+  display: none;
+}
+
+[data-theme="dark"] .sidebar-logo-base {
+  filter: brightness(1.55) saturate(1.25) drop-shadow(0 0 7px rgba(67, 142, 232, 0.28));
+}
+
+[data-theme="dark"] .sidebar-logo-word {
+  display: block;
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 0 0 36%);
+  filter: brightness(2.15) saturate(1.45) hue-rotate(22deg) drop-shadow(0 0 8px rgba(240, 82, 165, 0.3));
 }
 
 .nav-menu {
@@ -50,14 +73,15 @@
 }
 
 .nav-item:hover {
-  background: linear-gradient(135deg, var(--color-accent-soft-start), var(--color-accent-soft-end));
+  background: linear-gradient(135deg, var(--color-nav-hover-start), var(--color-nav-hover-end));
   transform: translateX(3px);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  background: linear-gradient(135deg, var(--color-nav-active-start), var(--color-nav-active-middle), var(--color-nav-active-end));
   color: white;
   font-weight: 600;
+  box-shadow: 0 5px 16px rgba(67, 142, 232, 0.2);
 }
 
 /* Profile Main */

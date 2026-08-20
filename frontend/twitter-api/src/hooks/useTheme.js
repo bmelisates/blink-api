@@ -5,7 +5,7 @@ function getInitialTheme() {
     const saved = localStorage.getItem('theme');
     if (saved) return saved;
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-  } catch (e) {
+  } catch {
     /* ignore */
   }
   return 'light';
@@ -22,7 +22,7 @@ export default function useTheme() {
         document.documentElement.removeAttribute('data-theme');
       }
       localStorage.setItem('theme', theme);
-    } catch (e) {
+    } catch {
       /* ignore */
     }
   }, [theme]);

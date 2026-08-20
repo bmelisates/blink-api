@@ -12,7 +12,10 @@ function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="logo">
-        <Logo className="sidebar-logo" />
+        <div className="sidebar-logo">
+          <Logo className="sidebar-logo-base" />
+          <Logo className="sidebar-logo-word" />
+        </div>
       </div>
       <nav className="nav-menu">
         <Link to="/home" className={`nav-item ${location.pathname === '/home' ? 'active' : ''}`}>{t('sidebar.home')}</Link>

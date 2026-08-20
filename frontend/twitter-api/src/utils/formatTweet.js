@@ -26,23 +26,9 @@ export const formatTweet = (tweet) => ({
   createdAt: tweet.createdAt,
   time: tweet.time || 'now',
   isLiked: tweet.likedByCurrentUser || false,
+  isRetweeted: tweet.retweetedByCurrentUser || false,
   isRetweet: false
 })
-
-export const formatTweetWithLikeStatus = async (tweet, currentUserId, api) => {
-  let isLiked = false
-  try {
-    const likesResponse = await api.get(`/likes/tweet/${tweet.id}`)
-    isLiked = likesResponse.data.some(like => like.user?.id === parseInt(currentUserId))
-  } catch (error) {
-    console.error('Error fetching like status:', error)
-  }
-
-  return {
-    ...formatTweet(tweet),
-    isLiked
-  }
-}
 
 export const formatRetweet = (retweet) => ({
   id: retweet.tweet?.id || retweet.id,
@@ -57,7 +43,7 @@ export const formatRetweet = (retweet) => ({
   createdAt: retweet.createdAt || retweet.tweet?.createdAt,
   time: 'now',
   isLiked: retweet.tweet?.likedByCurrentUser || false,
-  isRetweeted: true,
+  isRetweeted: retweet.tweet?.retweetedByCurrentUser ?? true,
   isRetweet: true,
   retweetedBy: retweet.user?.username || 'unknown',
   originalTweetId: retweet.tweet?.id

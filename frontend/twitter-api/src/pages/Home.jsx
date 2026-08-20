@@ -1,30 +1,26 @@
-import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import './Home.css'
 import api from '../services/api'
+import { fetchHomeTimeline } from '../services/homeTimeline'
 import SearchUser from './SearchUser'
 import SearchTweet from './SearchTweet'
 import Sidebar from './Sidebar'
 import FollowSuggestions from './FollowSuggestions'
-import TweetCard from '../components/TweetCard'
 import { useTweetCard } from '../hooks/useTweetCard'
-import { useTranslation } from '../hooks/useTranslation'
-import { formatTweet } from '../utils/formatTweet'
 import EditTweetModal from '../components/EditTweetModal'
 import TweetList from '../components/TweetList'
+import TweetComposer from '../components/TweetComposer'
 import useCloseOnOutsideClick from '../hooks/useCloseOnOutsideClick'
+import { useTimelineState } from '../hooks/useTimelineState'
 
 function Home() {
   // Sayfa genelinde kullanılacak tweet, retweet ve yeni tweet metni state'leri
-  const [tweets, setTweets] = useState([])
-  const [retweets, setRetweets] = useState([])
-  // inputa yazdığımız yeni tweet metni
-  const [newTweet, setNewTweet] = useState('')
-
+  const timeline = useTimelineState()
+  const { tweets, setTweets, retweets, setRetweets } = timeline
   const currentUserId = localStorage.getItem('userId')
   const tweetCard = useTweetCard()
   const location = useLocation()
-  const { t } = useTranslation()
 
   // Açık olan menü ve formların dışına tıklandığında kapanmasını sağlar
   useCloseOnOutsideClick(() => tweetCard.closeAll && tweetCard.closeAll(), ['.tweet-card', '.user-list', '.reply-form'])
@@ -47,163 +43,17 @@ function Home() {
     }
   }, [location.state?.scrollToTweet])
 
-  const [expandedLikes, setExpandedLikes] = useState({})
-  const [likesUsers, setLikesUsers] = useState({})
-  const [expandedRetweets, setExpandedRetweets] = useState({})
-  const [retweetsUsers, setRetweetsUsers] = useState({})
-  const [editingTweet, setEditingTweet] = useState(null)
-  const [editContent, setEditContent] = useState('')
-
   // Sayfa yüklendiğinde backend'den tüm tweetleri ve kullanıcının retweetlerini çeker
   useEffect(() => {
-    const fetchTweets = () => {
-      api.get('/tweets')
-          .then(async response => {
-          const formattedTweets = response.data
-              .map(tweet => ({
-                ...formatTweet(tweet),
-                isLiked: tweet.likedByCurrentUser || false
-              }))
-
-            const parentIds = [...new Set(formattedTweets.filter(t => t.parentTweetId).map(t => t.parentTweetId))]
-            const parentMap = {}
-            if (parentIds.length) {
-              await Promise.all(parentIds.map(async id => {
-                try {
-                  const r = await api.get(`/tweets/${id}`)
-                  const p = r.data
-                  parentMap[id] = {
-                    id: p.id,
-                    userId: p.user?.id || null,
-                    user: p.user?.username || 'unknown',
-                    name: p.user?.username || 'Unknown',
-                    content: p.content
-                  }
-                } catch (err) {
-                  console.error('Error fetching parent tweet:', err)
-                }
-              }))
-            }
-
-            const enriched = formattedTweets.map(t => ({ ...t, parent: t.parentTweetId ? parentMap[t.parentTweetId] || null : null }))
-            setTweets(enriched)
-          })
-          .catch(error => {
-            console.error('Error fetching tweets:', error)
-          })
-      }
-
-    const fetchRetweets = () => {
-      if (currentUserId) {
-        api.get(`/retweets/user/${currentUserId}`)
-          .then(async response => {
-            const formattedRetweets = await Promise.all(response.data.map(async retweet => {
-              let currentRetweetCount = retweet.tweet?.retweetCount || 0
-              try {
-                const countResponse = await api.get(`/retweets/tweet/${retweet.tweet?.id}/count`)
-                currentRetweetCount = countResponse.data
-              } catch (error) {
-                console.error('Error fetching retweet count:', error)
-              }
-
-              let currentLikeCount = retweet.tweet?.likeCount || 0
-              try {
-                const likeCountResponse = await api.get(`/likes/tweet/${retweet.tweet?.id}/count`)
-                currentLikeCount = likeCountResponse.data
-              } catch (error) {
-                console.error('Error fetching like count:', error)
-              }
-
-              return {
-                id: retweet.tweet?.id || retweet.id,
-                userId: retweet.tweet?.user?.id || null,
-                user: retweet.tweet?.user?.username || 'unknown',
-                name: retweet.tweet?.user?.username || 'Unknown',
-                content: retweet.tweet?.content || '',
-                likes: currentLikeCount,
-                retweets: currentRetweetCount,
-                comments: retweet.tweet?.replyCount || 0,
-                createdAt: retweet.createdAt || retweet.tweet?.createdAt,
-                isRetweeted: true,
-                isRetweet: true,
-                retweetedBy: retweet.user?.username || 'unknown',
-                originalTweetId: retweet.tweet?.id
-              }
-            }))
-            setRetweets(formattedRetweets)
-          })
-          .catch(error => {
-            console.error('Error fetching retweets:', error)
-          })
-      }
-    }
-
-    const fetchUserInfo = () => {
-      if (currentUserId && !localStorage.getItem('username')) {
-        api.get(`/users/${currentUserId}`)
-          .then(response => {
-            localStorage.setItem('username', response.data.username)
-          })
-          .catch(error => {
-            console.error('Error fetching user info:', error)
-          })
-      }
-    }
-
-    fetchTweets()
-    fetchRetweets()
-    fetchUserInfo()
-  }, [currentUserId])
-
-  // Yeni bir tweet oluşturur ve backend'e gönderdikten sonra akışa ekler
-  const handleTweet = () => {
-    if (newTweet.trim()) {
-      api.post('/tweets', { content: newTweet })
-        .then(response => {
-          const tweet = {
-            id: response.data.id,
-            userId: response.data.user?.id || null,
-            user: response.data.user?.username || 'ben',
-            name: response.data.user?.username || 'Ben',
-            content: response.data.content,
-            likes: response.data.likeCount || 0,
-            retweets: response.data.retweetCount || 0,
-            comments: response.data.replyCount || 0,
-            createdAt: response.data.createdAt,
-            isLiked: false,
-            isRetweeted: false
-          }
-          setTweets([tweet, ...tweets])
-          setNewTweet('')
-        })
-        .catch(error => {
-          console.error('Error creating tweet:', error)
-        })
-    }
-  }
-
-  // Beğeni durumunu yönetir; beğenildiyse kaldırır, beğenilmediyse ekler
-  const handleLike = async (tweetId) => {
-    try {
-      const allTweets = [...retweets, ...tweets]
-      const tweet = allTweets.find(t => t.id === tweetId)
-
-      if (tweet.isLiked) {
-        setTweets(tweets.map(t => t.id === tweetId ? { ...t, isLiked: false, likes: t.likes - 1 } : t))
-        setRetweets(retweets.map(r => r.id === tweetId ? { ...r, isLiked: false, likes: r.likes - 1 } : r))
-        await api.delete(`/likes/tweet/${tweetId}`)
-      } else {
-        setTweets(tweets.map(t => t.id === tweetId ? { ...t, isLiked: true, likes: t.likes + 1 } : t))
-        setRetweets(retweets.map(r => r.id === tweetId ? { ...r, isLiked: true, likes: r.likes + 1 } : r))
-        await api.post('/likes', { tweetId })
-      }
-    } catch (error) {
-      console.error('Error handling like:', error)
-    }
-  }
-
-  const handleLikeWrapper = (tweetId, isRetweet) => handleLike(tweetId)
-  const handleRetweetWrapper = (tweetId) => handleRetweet(tweetId)
+    fetchHomeTimeline(currentUserId)
+      .then(data => {
+        setTweets(data.tweets)
+        setRetweets(data.retweets)
+      })
+      .catch(error => {
+        console.error('Error fetching home timeline:', error)
+      })
+  }, [currentUserId, setRetweets, setTweets])
 
   // A child tweet retweet should also appear in the main feed immediately.
   const handleCommentRetweet = async (tweetId) => {
@@ -309,7 +159,7 @@ function Home() {
           ))
         }
       } else {
-        setTweets(tweets.map(t => t.id === tweetId ? { ...t, isRetweeted: true, retweets: t.retweets + 1 } : t))
+        setTweets(prev => prev.map(t => t.id === tweetId ? { ...t, isRetweeted: true, retweets: t.retweets + 1 } : t))
 
         let username = localStorage.getItem('username')
         if (!username && currentUserId) {
@@ -326,7 +176,7 @@ function Home() {
           retweets: tweet.retweets + 1,
           createdAt: new Date().toISOString()
         }
-        setRetweets([newRetweet, ...retweets])
+        setRetweets(prev => [newRetweet, ...prev])
         await api.post('/retweets', { tweetId })
       }
     } catch (error) {
@@ -366,31 +216,6 @@ function Home() {
     }
   }
 
-  // Düzenleme modunu açar ve mevcut içeriği form state'ine aktarır
-  const handleEdit = (tweet) => {
-    setEditingTweet(tweet)
-    setEditContent(tweet.content)
-  }
-
-  // Yapılan değişiklikleri backend'e göndererek tweet içeriğini günceller
-  const handleUpdate = async () => {
-    try {
-      await api.put(`/tweets/${editingTweet.id}`, { content: editContent })
-      setTweets(tweets.map(t => t.id === editingTweet.id ? { ...t, content: editContent } : t))
-      setRetweets(retweets.map(r => r.id === editingTweet.id ? { ...r, content: editContent } : r))
-      setEditingTweet(null)
-      setEditContent('')
-    } catch (error) {
-      console.error('Error updating tweet:', error)
-    }
-  }
-
-  // Düzenleme işlemini iptal eder
-  const handleCancelEdit = () => {
-    setEditingTweet(null)
-    setEditContent('')
-  }
-
   // Ana sayfa arayüz yerleşimi (Sidebar, akış, tweet girişi ve sağ panel)
   return (
     <div className="home-container">
@@ -400,46 +225,27 @@ function Home() {
       <main className="main-content">
         <SearchTweet />
 
-        {/* Yeni tweet yazma alanı */}
-        <div className="tweet-input-container">
-          <textarea
-            className="tweet-input"
-            placeholder={t('home.tweetInput')}
-            value={newTweet}
-            onChange={(e) => setNewTweet(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                handleTweet()
-              }
-            }}
-          />
-          <button className="tweet-btn" onClick={handleTweet}>
-            {t('home.tweetButton')}
-          </button>
-        </div>
+        <TweetComposer onCreated={tweet => setTweets(current => [tweet, ...current])} />
 
         <EditTweetModal
-          editingTweet={editingTweet}
-          editContent={editContent}
-          setEditContent={setEditContent}
-          onCancel={handleCancelEdit}
-          onSave={handleUpdate}
+          editingTweet={timeline.editingTweet}
+          editContent={timeline.editContent}
+          setEditContent={timeline.setEditContent}
+          onCancel={timeline.cancelEditing}
+          onSave={timeline.saveEditing}
         />
 
         {/* Tweetlerin listelendiği akış alanı */}
         <div className="tweets-feed">
           <TweetList
-            items={[...retweets, ...tweets].sort(
-              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-            )}
+            items={timeline.timelineItems}
             currentUserId={currentUserId}
             tweetCard={tweetCard}
             handlers={{
-              onLike: handleLike,
+              onLike: timeline.handleLike,
               onRetweet: handleRetweet,
               onDelete: handleDelete,
-              onEdit: handleEdit,
+              onEdit: timeline.startEditing,
               onReply: handleReply,
               onDeleteComment: handleDeleteComment,
               onCommentRetweet: handleCommentRetweet,
