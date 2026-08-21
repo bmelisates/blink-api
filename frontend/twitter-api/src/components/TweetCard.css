@@ -127,7 +127,12 @@
 
 .action-btn.like.liked {
   color: var(--color-accent);
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.action-btn.like.liked .action-count {
+  color: var(--color-accent);
+  font-weight: 700;
 }
 
 .action-count {

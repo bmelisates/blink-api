@@ -3,14 +3,17 @@ import { useLanguage } from '../contexts/LanguageContext'
 import './LanguageToggle.css'
 
 function LanguageToggle() {
+  // Aktif dili ve dil değiştirme fonksiyonunu ortak context'ten alıyoruz.
   const { language, changeLanguage } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
 
+  // Kullanıcının seçebileceği dilleri ve menüde gösterilecek etiketleri tanımlıyoruz.
   const languages = [
     { code: 'tr', name: 'Türkçe', label: 'TR' },
     { code: 'en', name: 'English', label: 'EN' }
   ]
 
+  // Aktif dile ait menü bilgisini buluyor, eşleşme yoksa Türkçeyi gösteriyoruz.
   const currentLang = languages.find(lang => lang.code === language) || languages[0]
 
   return (
@@ -30,6 +33,7 @@ function LanguageToggle() {
               key={lang.code}
               className={`lang-dropdown-item ${lang.code === language ? 'active' : ''}`}
               onClick={() => {
+                // Seçilen dili kaydedip açılır menüyü kapatıyoruz.
                 changeLanguage(lang.code)
                 setIsOpen(false)
               }}
