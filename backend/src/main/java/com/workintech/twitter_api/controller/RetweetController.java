@@ -38,8 +38,8 @@ public class RetweetController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<RetweetResponse> findByUserId(@PathVariable Long userId) {
-        return retweetService.findByUserId(userId);
+    public List<RetweetResponse> findByUserId(@PathVariable Long userId, Authentication authentication) {
+        return retweetService.findByUserId(userId, authentication == null ? null : authentication.getName());
     }
 
     @GetMapping("/tweet/{tweetId}")

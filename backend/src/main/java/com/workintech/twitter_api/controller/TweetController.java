@@ -23,38 +23,42 @@ public class TweetController {
     }
 
     @GetMapping
-    public List<TweetResponse> findAll() {
-        return tweetService.findAll();
+    public List<TweetResponse> findAll(Authentication authentication) {
+        return tweetService.findAll(viewerUsername(authentication));
     }
 
     @GetMapping("/{id}")
-    public TweetResponse findById(@PathVariable Long id) {
-        return tweetService.findById(id);
+    public TweetResponse findById(@PathVariable Long id, Authentication authentication) {
+        return tweetService.findById(id, viewerUsername(authentication));
     }
 
     @GetMapping("/user/{userId}")
-    public List<TweetResponse> findByUserId(@PathVariable Long userId) {
-        return tweetService.findByUserId(userId);
+    public List<TweetResponse> findByUserId(@PathVariable Long userId, Authentication authentication) {
+        return tweetService.findByUserId(userId, viewerUsername(authentication));
     }
 
     @GetMapping("/search")
-    public List<TweetResponse> findByContentContaining(@RequestParam String keyword) {
-        return tweetService.search(keyword);
+    public List<TweetResponse> findByContentContaining(@RequestParam String keyword, Authentication authentication) {
+        return tweetService.search(keyword, viewerUsername(authentication));
     }
 
     @GetMapping("/user/{userId}/search")
-    public List<TweetResponse> findByUserIdAndContentContaining(@PathVariable Long userId, @RequestParam String keyword) {
-        return tweetService.searchByUserId(userId, keyword);
+    public List<TweetResponse> findByUserIdAndContentContaining(@PathVariable Long userId, @RequestParam String keyword, Authentication authentication) {
+        return tweetService.searchByUserId(userId, keyword, viewerUsername(authentication));
     }
 
     @GetMapping("/{id}/replies")
-    public List<TweetResponse> findByParentTweetId(@PathVariable Long id) {
-        return tweetService.findByParentTweetId(id);
+    public List<TweetResponse> findByParentTweetId(@PathVariable Long id, Authentication authentication) {
+        return tweetService.findByParentTweetId(id, viewerUsername(authentication));
     }
 
     @GetMapping("/user/{userId}/count")
     public long countByUserId(@PathVariable Long userId) {
         return tweetService.countByUserId(userId);
+    }
+
+    private String viewerUsername(Authentication authentication) {
+        return authentication == null ? null : authentication.getName();
     }
 
     @PostMapping

@@ -8,19 +8,19 @@ import java.util.List;
 
 public interface TweetService {
     // --- Temel CRUD İşlemleri ---
-    TweetResponse findById(Long id);
-    List<TweetResponse> findAll();
-    List<TweetResponse> findByUserId(Long userId);
+    TweetResponse findById(Long id, String viewerUsername);
+    List<TweetResponse> findAll(String viewerUsername);
+    List<TweetResponse> findByUserId(Long userId, String viewerUsername);
     TweetResponse createTweet(TweetRequest request, String username);
     TweetResponse updateTweet(Long id, TweetRequest request, String username);
     void deleteTweet(Long tweetId, String username);
 
     // --- Arama ve Sorgulama Metotları ---
-    List<TweetResponse> search(String keyword);
-    List<TweetResponse> searchByUserId(Long userId, String keyword);
+    List<TweetResponse> search(String keyword, String viewerUsername);
+    List<TweetResponse> searchByUserId(Long userId, String keyword, String viewerUsername);
 
     // Reply
-    List<TweetResponse> findByParentTweetId(Long parentTweetId);
+    List<TweetResponse> findByParentTweetId(Long parentTweetId, String viewerUsername);
 
     // Sayılar
     long countByUserId(Long userId);

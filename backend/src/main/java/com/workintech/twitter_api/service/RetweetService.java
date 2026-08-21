@@ -10,7 +10,7 @@ public interface RetweetService {
     // --- Temel CRUD İşlemleri ---
     RetweetResponse findById(Long id);
     List<RetweetResponse> findAll();
-    List<RetweetResponse> findByUserId(Long userId);
+    List<RetweetResponse> findByUserId(Long userId, String viewerUsername);
     List<RetweetResponse> findByTweetId(Long tweetId);
     RetweetResponse createRetweet(Long userId, RetweetRequest request);
     void deleteRetweet(Long id);

@@ -31,6 +31,10 @@ public class RetweetServiceImpl implements RetweetService {
 
     // Entity'yi RetweetResponse DTO'suna çevirme
     private RetweetResponse convertToResponse(Retweet retweet) {
+        return convertToResponse(retweet, null);
+    }
+
+    private RetweetResponse convertToResponse(Retweet retweet, String viewerUsername) {
         if (retweet == null) return null;
 
         RetweetResponse response = new RetweetResponse();
@@ -62,6 +66,14 @@ public class RetweetServiceImpl implements RetweetService {
                         retweet.getTweet().getUser().getEmail()
                 ));
             }
+
+            tweetResponse.setLikeCount(retweet.getTweet().getLikes().size());
+            tweetResponse.setRetweetCount(retweet.getTweet().getRetweets().size());
+            tweetResponse.setReplyCount(retweet.getTweet().getReplies().size());
+            tweetResponse.setLikedByCurrentUser(viewerUsername != null && retweet.getTweet().getLikes().stream()
+                    .anyMatch(like -> viewerUsername.equals(like.getUser().getUsername())));
+            tweetResponse.setRetweetedByCurrentUser(viewerUsername != null && retweet.getTweet().getRetweets().stream()
+                    .anyMatch(item -> viewerUsername.equals(item.getUser().getUsername())));
 
             response.setTweet(tweetResponse);
         }
@@ -95,10 +107,10 @@ public class RetweetServiceImpl implements RetweetService {
     }
 
     @Override
-    public List<RetweetResponse> findByUserId(Long userId) {
+    public List<RetweetResponse> findByUserId(Long userId, String viewerUsername) {
         return retweetRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
-                .map(this::convertToResponse)
+                .map(retweet -> convertToResponse(retweet, viewerUsername))
                 .toList();
     }
 

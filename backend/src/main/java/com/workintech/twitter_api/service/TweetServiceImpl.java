@@ -40,7 +40,7 @@ public class TweetServiceImpl implements TweetService {
     }
 
     // Tweet'ı TweetResponse' a çevirir
-    private TweetResponse convertToResponse(Tweet tweet) {
+    private TweetResponse convertToResponse(Tweet tweet, String viewerUsername) {
         TweetResponse response = new TweetResponse();
 
         response.setId(tweet.getId());
@@ -53,38 +53,42 @@ public class TweetServiceImpl implements TweetService {
         }
 
         if (tweet.getParentTweet() != null) {
-            response.setParentTweet(convertToResponse(tweet.getParentTweet()));
+            response.setParentTweet(convertToResponse(tweet.getParentTweet(), viewerUsername));
         }
 
         response.setLikeCount(tweet.getLikes() != null ? tweet.getLikes().size() : 0);
         response.setRetweetCount(tweet.getRetweets() != null ? tweet.getRetweets().size() : 0);
         response.setReplyCount(tweet.getReplies() != null ? tweet.getReplies().size() : 0);
+        response.setLikedByCurrentUser(viewerUsername != null && tweet.getLikes().stream()
+                .anyMatch(like -> viewerUsername.equals(like.getUser().getUsername())));
+        response.setRetweetedByCurrentUser(viewerUsername != null && tweet.getRetweets().stream()
+                .anyMatch(retweet -> viewerUsername.equals(retweet.getUser().getUsername())));
 
         return response;
     }
 
     // Id'si ile tweeti bulur, TweetResponse'a çevirir.
     @Override
-    public TweetResponse findById(Long id) {
+    public TweetResponse findById(Long id, String viewerUsername) {
         Tweet tweet = findEntityById(id);
-        return convertToResponse(tweet);
+        return convertToResponse(tweet, viewerUsername);
     }
 
     // Tüm tweetleri listeler.
     @Override
-    public List<TweetResponse> findAll() {
+    public List<TweetResponse> findAll(String viewerUsername) {
         return tweetRepository.findAllTweetsWithUser()
                 .stream()
-                .map(this::convertToResponse)
+                .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
     }
 
     // userId'ye göre tweetleri listeler.
     @Override
-    public List<TweetResponse> findByUserId(Long userId) {
+    public List<TweetResponse> findByUserId(Long userId, String viewerUsername) {
         return tweetRepository.findByUserIdWithUser(userId)
                 .stream()
-                .map(this::convertToResponse)
+                .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
     }
 
@@ -111,7 +115,7 @@ public class TweetServiceImpl implements TweetService {
         // Tweeti kaydeder
         Tweet savedTweet = tweetRepository.save(tweet);
         // Tweeti response' a çevirir
-        return convertToResponse(savedTweet);
+        return convertToResponse(savedTweet, username);
     }
 
     // Tweeti günceller.
@@ -135,7 +139,7 @@ public class TweetServiceImpl implements TweetService {
         // Tweeti kaydeder
         Tweet savedTweet = tweetRepository.save(existingTweet);
         // Tweeti response' a çevirir
-        return convertToResponse(savedTweet);
+        return convertToResponse(savedTweet, username);
     }
 
     @Override
@@ -160,28 +164,28 @@ public class TweetServiceImpl implements TweetService {
 
     // Keyword'ü içeren tweetleri listeler.
     @Override
-    public List<TweetResponse> search(String keyword) {
+    public List<TweetResponse> search(String keyword, String viewerUsername) {
         return tweetRepository.findByContentContainingIgnoreCaseOrderByCreatedAtDesc(keyword)
                 .stream()
-                .map(this::convertToResponse)
+                .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
     }
 
     // Keyword'ü içeren tweetleri userId'ye göre listeler.(Sadece o kişinin tweetlerinde aramak istersek)
     @Override
-    public List<TweetResponse> searchByUserId(Long userId, String keyword) {
+    public List<TweetResponse> searchByUserId(Long userId, String keyword, String viewerUsername) {
         return tweetRepository.findByUserIdAndContentContainingIgnoreCaseOrderByCreatedAtDesc(userId, keyword)
                 .stream()
-                .map(this::convertToResponse)
+                .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
     }
 
     // parentId'ye göre tweetleri listeler.
     @Override
-    public List<TweetResponse> findByParentTweetId(Long parentTweetId) {
+    public List<TweetResponse> findByParentTweetId(Long parentTweetId, String viewerUsername) {
         return tweetRepository.findByParentTweetIdOrderByCreatedAtAsc(parentTweetId)
                 .stream()
-                .map(this::convertToResponse)
+                .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
     }
 
