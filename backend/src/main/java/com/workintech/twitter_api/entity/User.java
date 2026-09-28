@@ -43,6 +43,10 @@ public class User {
     @Column(name = "role", nullable = false)
     private Role role = Role.USER; // Varsayılan olarak her kaydolan normal USER olur
 
+    // Şifre değişikliğinde artırılır; önceki token'lar reddedilir.
+    @Column(name = "token_version", nullable = false, columnDefinition = "bigint default 0")
+    private long tokenVersion = 0;
+
     // User'ın tweetleri
     @OneToMany(mappedBy = "user", // Tweet.java sınıfının içindeki User user değişkenini işaret ediyoruz!!!!!
             cascade = CascadeType.ALL, // user silinirse ona ait tweetler de silinir

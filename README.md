@@ -60,6 +60,14 @@ Open <http://localhost:5173>. The API runs on port 8080. The local frontend orig
 
 ## Follow API
 
+Authentication uses signed, seven-day access tokens whose subject is the immutable user ID. Tokens also carry an access-token format marker and the user's `token_version`. Password updates increment that version, invalidating previous tokens on subsequent requests. Existing databases receive the version column with a default of zero through the current Hibernate development schema update.
+
+Username-based tokens from earlier versions are intentionally rejected; users must sign in again after this update. Logout removes local credentials (also reflected in other tabs); it does not revoke an already copied token on the server. Password changes do revoke previous tokens. The frontend clears the active session on expiry or an authenticated 401 response, without letting a late response from a previous login clear a newer session. Server signature/expiry/version checks remain authoritative.
+
+Auth regression tests: `mvn.cmd "-Dtest=AuthSecurityTest,UserSessionTest" test` from `backend`. Frontend session tests: `npm.cmd test` from `frontend/twitter-api`.
+
+On 2026-09-28 the combined backend feature suite passed 47 tests, and the frontend session suite passed 5 tests alongside lint/build. Browser verification confirmed successful login, incorrect-credential feedback, and redirection to login after logout when using Back or opening `/messages` directly. Password-change revocation and invalid/expired tokens were verified by automated tests; no real user's password was changed for testing.
+
 All follow endpoints require `Authorization: Bearer <token>`. The authenticated user is the actor; `{userId}` identifies the target profile. Mutation requests do not need a body.
 
 | Method | Endpoint | Result |

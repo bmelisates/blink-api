@@ -1,3 +1,5 @@
+import { useRef, useState } from 'react'
+import { saveSession } from '../services/session'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import './Login.css'
@@ -11,6 +13,8 @@ function Login() {
   // Sayfa yönlendirmesi için kullanıyoruz.
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const [pending, setPending] = useState(false)
+  const submitting = useRef(false)
 
   // Formdaki username ve password değerlerini yönetiyoruz.
   const { formData, handleChange } = useForm({
@@ -19,39 +23,25 @@ function Login() {
   })
 
   // Form submit edildiğinde çalışan fonksiyon.
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-
-    // Backende login isteği gönderiyoruz.
-    api.post('/auth/login', formData)
-      .then(response => {
-
-        // Backendten gelen Token ve userId'yi localStorage'a kaydediyoruz.
-        localStorage.setItem('token', response.data.token)
-        localStorage.setItem('userId', response.data.userId)
-        
-        // Kullanıcı bilgilerini almak için backende istek atıyoruz.
-        api.get(`/users/${response.data.userId}`)
-          .then(userResponse => {
-            localStorage.setItem('username', userResponse.data.username)
-            toast.success(t('auth.loginSuccess'))
-            navigate('/home')
-          })
-          .catch(error => {
-            console.error('Error fetching user info:', error)
-            // İstek başarısız olursa formdaki username'i kullanıyoruz
-            localStorage.setItem('username', formData.username)
-            toast.success(t('auth.loginSuccess'))
-            navigate('/home')
-          })
-      })
-      .catch(error => {
-        // Login başarısızsa hata mesajı gösteriyoruz
-        console.error('Error logging in:', error)
-        toast.error(t('auth.invalidCredentials'))
-      })
+    if (submitting.current) return
+    submitting.current = true
+    setPending(true)
+    try {
+      const response = await api.post('/auth/login', formData)
+      saveSession(response.data)
+      toast.success(t('auth.loginSuccess'))
+      navigate('/home', { replace: true })
+    } catch (error) {
+      const key = !error.response ? 'auth.connectionError'
+        : error.response.status === 401 ? 'auth.invalidCredentials' : 'auth.loginFailed'
+      toast.error(t(key))
+    } finally {
+      submitting.current = false
+      setPending(false)
+    }
   }
-
   return (
     <div className="login-container">
       <div className="login-card">
@@ -93,8 +83,8 @@ function Login() {
             />
           </div>
 
-          <button type="submit" className="login-btn">
-            {t('auth.login')}
+          <button type="submit" className="login-btn" disabled={pending}>
+            {pending ? t('common.loading') : t('auth.login')}
           </button>
         </form>
 

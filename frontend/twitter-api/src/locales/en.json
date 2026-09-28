@@ -46,6 +46,7 @@
     "passwordPlaceholder": "Your password",
     "passwordHint": "At least 8 characters",
     "loginSuccess": "Login successful!",
+    "loginFailed": "Could not sign in. Please try again.",
     "registrationSuccess": "Registration successful!",
     "usernameAlreadyExists": "This username is already in use.",
     "emailAlreadyExists": "A user with this email address already exists.",

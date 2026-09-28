@@ -46,6 +46,7 @@
     "passwordPlaceholder": "Şifreniz",
     "passwordHint": "En az 8 karakter",
     "loginSuccess": "Giriş başarılı!",
+    "loginFailed": "Giriş tamamlanamadı. Lütfen tekrar deneyin.",
     "registrationSuccess": "Kayıt başarılı!",
     "usernameAlreadyExists": "Bu kullanıcı adı zaten kullanımda.",
     "emailAlreadyExists": "Bu e-posta adresiyle kayıtlı bir kullanıcı zaten mevcut.",

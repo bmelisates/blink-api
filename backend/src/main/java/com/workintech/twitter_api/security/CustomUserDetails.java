@@ -28,6 +28,10 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
+    public Long getId() { return user.getId(); }
+
+    public long getTokenVersion() { return user.getTokenVersion(); }
+
 
     // Spring Security kullanıcının USERNAME'ini sorduğunda bizim User entity'mizdeki username'i döndürüyoruz.
     @Override

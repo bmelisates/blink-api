@@ -20,6 +20,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+    public CustomUserDetails loadUserById(Long id) {
+        return new CustomUserDetails(userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found")));
+    }
+
     // Spring Security kullanıcıyı bulmak istediğinde bu metodu çağırır.
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

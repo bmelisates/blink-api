@@ -28,24 +28,34 @@ public class JwtService {
         );
     }
 
-    // Kullanıcının username bilgisini JWT içine koyup imzalı bir token oluşturur.
-    public String generateToken(String username) {
+    // Değişmeyen kullanıcı ID'si ve oturum sürümü.
+    public String generateToken(Long userId, long tokenVersion) {
         return Jwts.builder()
-                .subject(username)
+                .subject(userId.toString())
+                .claim("type", "access-v2")
+                .claim("tokenVersion", tokenVersion)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey())
                 .compact();
     }
 
-    // JWT'nin içindeki username bilgisini okur.
-    public String extractUsername(String token) {
+    public record TokenIdentity(Long userId, long tokenVersion) { }
 
-        return Jwts.parser()
+    public TokenIdentity extractIdentity(String token) {
+
+        var claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+                .getPayload();
+        Long version = claims.get("tokenVersion", Long.class);
+        if (!"access-v2".equals(claims.get("type")) || version == null || version < 0
+                || claims.getExpiration() == null) {
+            throw new io.jsonwebtoken.JwtException("Invalid access token");
+        }
+        Long userId = Long.valueOf(claims.getSubject());
+        if (userId <= 0) throw new io.jsonwebtoken.JwtException("Invalid user ID");
+        return new TokenIdentity(userId, version);
     }
 }

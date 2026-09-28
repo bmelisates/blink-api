@@ -83,9 +83,10 @@ public class UserServiceImpl implements UserService {
 
     // Mevcut kullanıcı bilgilerini güncelle.
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public UserResponse updateUser(Long id, UserUpdateRequest request) {
         // Değiştirilmek istenen user mevcut mu?
-        User existingUser = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User existingUser = userRepository.findLockedById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Username gönderilmişse kontrol et ve güncelle
         if (request.getUsername() != null && !request.getUsername().isEmpty()) {
@@ -118,6 +119,7 @@ public class UserServiceImpl implements UserService {
             existingUser.setPassword(
                     passwordEncoder.encode(request.getPassword())
             );
+            existingUser.setTokenVersion(existingUser.getTokenVersion() + 1);
         }
 
         return convertToResponse(userRepository.save(existingUser));

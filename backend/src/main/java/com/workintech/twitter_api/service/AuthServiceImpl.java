@@ -15,13 +15,9 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     // JWT token oluşturur
     private final JwtService jwtService;
-    // Kullanıcı bilgilerini almak için
-    private final UserService userService;
-
-    public AuthServiceImpl(AuthenticationManager authenticationManager, JwtService jwtService, UserService userService) {
+    public AuthServiceImpl(AuthenticationManager authenticationManager, JwtService jwtService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
-        this.userService = userService;
     }
 
     @Override
@@ -35,18 +31,19 @@ public class AuthServiceImpl implements AuthService {
                 );
 
         // Kullanıcı adı ve şifre doğru mu kontrol et. Yanlışsa burada exception oluşur.
-        authenticationManager.authenticate(authenticationToken);
+        var authenticated = authenticationManager.authenticate(authenticationToken);
+        var principal = (com.workintech.twitter_api.security.CustomUserDetails) authenticated.getPrincipal();
 
         // Authentication başarılıysa JWT oluştur.
         String token = jwtService.generateToken(
-                request.getUsername()
+                principal.getId(), principal.getTokenVersion()
         );
 
         // Kullanıcı ID'sini al
-        Long userId = userService.findEntityByUsername(request.getUsername()).getId();
+        Long userId = principal.getId();
 
         // Kullanıcı adını al
-        String username = request.getUsername();
+        String username = principal.getUsername();
 
         // JWT'yi, userId'yi ve username'i response olarak kullanıcıya gönder.
         return new LoginResponse(token, userId, username);

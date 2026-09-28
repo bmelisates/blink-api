@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -48,12 +47,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
 
-            // JWT'nin içinden username'i çıkar.
-            String username = jwtService.extractUsername(token);
+            // İmzalı token'dan sabit kullanıcı ID'sini ve oturum sürümünü çıkar.
+            var identity = jwtService.extractIdentity(token);
 
-            // Username ile DB'den kullanıcıyı bul.
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(username);
+            // ID ile güncel kullanıcıyı bul; controller'lar güncel username'i görür.
+            CustomUserDetails userDetails = userDetailsService.loadUserById(identity.userId());
+            if (userDetails.getTokenVersion() != identity.tokenVersion()) {
+                throw new io.jsonwebtoken.JwtException("Session revoked");
+            }
 
             // Kullanıcı için Authentication nesnesi oluştur.
             UsernamePasswordAuthenticationToken authentication =
@@ -67,7 +68,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext()
                     .setAuthentication(authentication);
 
-        } catch (Exception e) {
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException | org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+            SecurityContextHolder.clearContext();
 
             // JWT geçersizse authentication oluşturma.
             // Request yine filter zincirinde devam eder.

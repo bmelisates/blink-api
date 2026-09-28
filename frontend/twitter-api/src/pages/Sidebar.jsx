@@ -5,6 +5,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import LanguageToggle from '../components/LanguageToggle'
 import { useTranslation } from '../hooks/useTranslation'
 import { useUnreadMessages } from '../hooks/useUnreadMessages'
+import { clearSession } from '../services/session'
 
 function Sidebar() {
   const location = useLocation()
@@ -25,7 +26,7 @@ function Sidebar() {
         <Link to="/messages" className={`nav-item ${location.pathname === '/messages' ? 'active' : ''}`}>
           {t('messages.title')}{unread > 0 ? ` (${unread})` : ''}</Link>
         <Link to="/profile" className={`nav-item ${location.pathname === '/profile' ? 'active' : ''}`}>{t('sidebar.profile')}</Link>
-        <Link to="/login" className="nav-item" style={{marginTop: '10px'}}>{t('sidebar.logout')}</Link>
+        <Link to="/login" replace onClick={() => clearSession()} className="nav-item" style={{marginTop: '10px'}}>{t('sidebar.logout')}</Link>
       </nav>
       <div style={{padding: '0 20px'}}>
         <ThemeToggle />
