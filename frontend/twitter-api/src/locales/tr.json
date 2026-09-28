@@ -71,6 +71,21 @@
     "profile": "Profil",
     "logout": "Çıkış Yap"
   },
+  "messages": {
+    "title": "Mesajlar",
+    "start": "Mesaj gönder",
+    "conversation": "Özel konuşma",
+    "write": "Mesajınız",
+    "send": "Gönder",
+    "read": "Okundu",
+    "unread": "okunmamış",
+    "older": "Eski mesajları yükle",
+    "emptyThread": "Henüz mesaj yok. İlk mesajı sen gönder.",
+    "emptyInbox": "Henüz konuşma yok. Bir kullanıcının profilinden mesaj gönderebilirsin.",
+    "select": "Bir konuşma seç veya bir kullanıcının profilinden yeni konuşma başlat.",
+    "error": "Mesajlar yüklenemedi. Lütfen tekrar deneyin.",
+    "sendError": "Mesaj gönderilemedi. Metnin korundu; tekrar denemeden önce mesajın ulaşıp ulaşmadığını kontrol et."
+  },
   "follow": {
     "actionError": "Takip işlemi tamamlanamadı. Lütfen tekrar deneyin.",
     "loadError": "Takip bilgileri yüklenemedi.",

@@ -12,6 +12,10 @@ import java.util.Optional;
 // JpaRepository, belirli bir entity sınıfı ve onun primary key türü ile çalışır.
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select u from User u where u.id = :id")
+    Optional<User> findLockedById(@org.springframework.data.repository.query.Param("id") Long id);
+
     // Belirli bir username'li kullanıcının bilgilerini getirir
     Optional<User> findByUsername(String username);
     // Optional -> değer bulunamadığında null yerine Optional.empty() döndürür.

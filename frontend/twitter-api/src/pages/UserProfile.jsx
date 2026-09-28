@@ -8,6 +8,8 @@ import ProfilePageContent from '../components/ProfilePageContent'
 import useCloseOnOutsideClick from '../hooks/useCloseOnOutsideClick'
 import { useTimelineState } from '../hooks/useTimelineState'
 import FollowButton from '../components/FollowButton'
+import MessageButton from '../components/MessageButton'
+import './Messages.css'
 
 function UserProfile() {
   const { userId } = useParams()
@@ -76,7 +78,7 @@ function UserProfile() {
     <ProfilePageContent
       key={userId}
       user={String(user?.id) === String(userId) ? user : null}
-      action={<FollowButton userId={userId} className="edit-profile-btn" />}
+      action={<><FollowButton userId={userId} className="edit-profile-btn" /><MessageButton userId={userId} /></>}
       timeline={timeline}
       currentUserId={currentUserId}
       tweetCard={tweetCard}

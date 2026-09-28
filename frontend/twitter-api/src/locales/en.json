@@ -71,6 +71,21 @@
     "profile": "Profile",
     "logout": "Logout"
   },
+  "messages": {
+    "title": "Messages",
+    "start": "Send message",
+    "conversation": "Private conversation",
+    "write": "Your message",
+    "send": "Send",
+    "read": "Read",
+    "unread": "unread",
+    "older": "Load older messages",
+    "emptyThread": "No messages yet. Send the first message.",
+    "emptyInbox": "No conversations yet. Visit a user profile to start one.",
+    "select": "Select a conversation or start one from a user profile.",
+    "error": "Could not load messages. Please try again.",
+    "sendError": "Could not send the message. Your text is preserved; check whether it arrived before retrying."
+  },
   "follow": {
     "actionError": "Could not complete the follow action. Please try again.",
     "loadError": "Could not load follow information.",

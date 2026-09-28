@@ -4,10 +4,12 @@ import Logo from '../components/Logo'
 import ThemeToggle from '../components/ThemeToggle'
 import LanguageToggle from '../components/LanguageToggle'
 import { useTranslation } from '../hooks/useTranslation'
+import { useUnreadMessages } from '../hooks/useUnreadMessages'
 
 function Sidebar() {
   const location = useLocation()
   const { t } = useTranslation()
+  const unread = useUnreadMessages()
 
   return (
     <aside className="sidebar">
@@ -20,7 +22,8 @@ function Sidebar() {
       <nav className="nav-menu">
         <Link to="/home" className={`nav-item ${location.pathname === '/home' ? 'active' : ''}`}>{t('sidebar.home')}</Link>
         <Link to="/home" className="nav-item">Bildirimler</Link>
-        <Link to="/home" className="nav-item">Mesajlar</Link>
+        <Link to="/messages" className={`nav-item ${location.pathname === '/messages' ? 'active' : ''}`}>
+          {t('messages.title')}{unread > 0 ? ` (${unread})` : ''}</Link>
         <Link to="/profile" className={`nav-item ${location.pathname === '/profile' ? 'active' : ''}`}>{t('sidebar.profile')}</Link>
         <Link to="/login" className="nav-item" style={{marginTop: '10px'}}>{t('sidebar.logout')}</Link>
       </nav>

@@ -12,6 +12,7 @@ const Register = lazy(() => import('./pages/Register'))
 const Login = lazy(() => import('./pages/Login'))
 const Profile = lazy(() => import('./pages/Profile'))
 const UserProfile = lazy(() => import('./pages/UserProfile'))
+const Messages = lazy(() => import('./pages/Messages'))
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route
               path="/profile"
               element={
