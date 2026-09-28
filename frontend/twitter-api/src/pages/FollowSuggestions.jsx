@@ -3,6 +3,7 @@ import './FollowSuggestions.css'
 import api from '../services/api'
 import UserLink from '../components/UserLink'
 import { useTranslation } from '../hooks/useTranslation'
+import FollowButton from '../components/FollowButton'
 
 function FollowSuggestions() {
   const [users, setUsers] = useState([])
@@ -40,7 +41,7 @@ function FollowSuggestions() {
               @{user.username}
             </UserLink>
           </div>
-          <button className="follow-btn">{t('search.follow')}</button>
+          <FollowButton userId={user.id} />
         </div>
       ))}
     </div>

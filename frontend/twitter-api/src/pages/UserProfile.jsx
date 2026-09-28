@@ -7,23 +7,22 @@ import { useTweetCard } from '../hooks/useTweetCard'
 import ProfilePageContent from '../components/ProfilePageContent'
 import useCloseOnOutsideClick from '../hooks/useCloseOnOutsideClick'
 import { useTimelineState } from '../hooks/useTimelineState'
-import { useTranslation } from '../hooks/useTranslation'
+import FollowButton from '../components/FollowButton'
 
 function UserProfile() {
   const { userId } = useParams()
   const [user, setUser] = useState(null)
-  const [isFollowing, setIsFollowing] = useState(false)
   const timeline = useTimelineState()
   const { setTweets, setRetweets } = timeline
 
   const tweetCard = useTweetCard()
   const currentUserId = tweetCard.currentUserId
-  const { t } = useTranslation()
 
   // Close open lists/forms when clicking outside a tweet card
   useCloseOnOutsideClick(() => tweetCard.closeAll && tweetCard.closeAll(), ['.tweet-card', '.user-list', '.reply-form'])
 
   useEffect(() => {
+    let active = true
     // Fetch current user info to get username if not in localStorage
     const fetchUserInfo = () => {
       if (currentUserId && !localStorage.getItem('username')) {
@@ -40,6 +39,7 @@ function UserProfile() {
     if (userId) {
       fetchProfileData(userId)
         .then(data => {
+          if (!active) return
           setUser(data.user)
           setTweets(data.tweets)
           setRetweets(data.retweets)
@@ -49,12 +49,8 @@ function UserProfile() {
         })
     }
     fetchUserInfo()
+    return () => { active = false }
   }, [currentUserId, setRetweets, setTweets, userId])
-
-  const handleFollow = () => {
-    // Takip etme/iptal etme mantığı
-    setIsFollowing(current => !current)
-  }
 
   const handleReply = async (tweetId, replyContent, isRetweet) => {
     try {
@@ -78,15 +74,9 @@ function UserProfile() {
 
   return (
     <ProfilePageContent
-      user={user}
-      action={(
-        <button
-          className={`edit-profile-btn ${isFollowing ? 'following' : ''}`}
-          onClick={handleFollow}
-        >
-          {isFollowing ? t('search.following') : t('search.follow')}
-        </button>
-      )}
+      key={userId}
+      user={String(user?.id) === String(userId) ? user : null}
+      action={<FollowButton userId={userId} className="edit-profile-btn" />}
       timeline={timeline}
       currentUserId={currentUserId}
       tweetCard={tweetCard}

@@ -1,7 +1,14 @@
 import { useTranslation } from '../hooks/useTranslation'
+import { useState } from 'react'
+import { useFollow } from '../hooks/useFollow'
+import { FOLLOW_CHANGED } from '../services/follow'
+import FollowList from './FollowList'
+import './Follow.css'
 
 export default function ProfileHeader({ user, action }) {
   const { t } = useTranslation()
+  const { stats, loading, error } = useFollow(user?.id)
+  const [list, setList] = useState(null)
 
   return (
     <div className="profile-header">
@@ -18,9 +25,16 @@ export default function ProfileHeader({ user, action }) {
             {user?.joinedDate && <span className="meta-item">📅 {user.joinedDate}</span>}
           </div>
           <div className="user-stats">
-            <span className="stat-item"><strong>{user?.following || 0}</strong> {t('profile.followingLabel')}</span>
-            <span className="stat-item"><strong>{user?.followers || 0}</strong> {t('profile.followersLabel')}</span>
+            <button type="button" className="stat-item" disabled={!stats || loading}
+              aria-expanded={list === 'following'} onClick={() => setList(list === 'following' ? null : 'following')}>
+              <strong>{stats?.followingCount ?? '—'}</strong> {t('profile.followingLabel')}</button>
+            <button type="button" className="stat-item" disabled={!stats || loading}
+              aria-expanded={list === 'followers'} onClick={() => setList(list === 'followers' ? null : 'followers')}>
+              <strong>{stats?.followerCount ?? '—'}</strong> {t('profile.followersLabel')}</button>
           </div>
+          {error && <p role="alert">{t('follow.loadError')} <button type="button"
+            onClick={() => window.dispatchEvent(new Event(FOLLOW_CHANGED))}>{t('follow.retry')}</button></p>}
+          {list && user?.id && <FollowList key={`${user.id}-${list}`} userId={user.id} type={list} onClose={() => setList(null)} />}
         </div>
       </div>
     </div>

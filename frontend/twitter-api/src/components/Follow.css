@@ -1,0 +1,36 @@
+.follow-btn:disabled, .edit-profile-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.follow-list {
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--color-soft);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+.follow-list-heading, .follow-list-row, .follow-list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+.follow-list h2 { font-size: 18px; }
+.follow-list a { color: var(--color-text); overflow-wrap: anywhere; }
+.follow-list button, button.stat-item {
+  cursor: pointer;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-soft);
+  border-radius: 8px;
+  padding: 8px;
+  font: inherit;
+}
+button.stat-item { border: 0; }
+.follow-list button:disabled { opacity: 0.5; cursor: default; }
+.follow-list button:focus-visible, button.stat-item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

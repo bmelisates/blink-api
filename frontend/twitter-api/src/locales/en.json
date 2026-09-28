@@ -71,6 +71,15 @@
     "profile": "Profile",
     "logout": "Logout"
   },
+  "follow": {
+    "actionError": "Could not complete the follow action. Please try again.",
+    "loadError": "Could not load follow information.",
+    "retry": "Retry",
+    "empty": "No users yet.",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next"
+  },
   "search": {
     "searchUser": "Search users",
     "follow": "Follow",

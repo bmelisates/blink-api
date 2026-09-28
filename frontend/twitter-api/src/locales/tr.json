@@ -71,6 +71,15 @@
     "profile": "Profil",
     "logout": "Çıkış Yap"
   },
+  "follow": {
+    "actionError": "Takip işlemi tamamlanamadı. Lütfen tekrar deneyin.",
+    "loadError": "Takip bilgileri yüklenemedi.",
+    "retry": "Tekrar dene",
+    "empty": "Henüz kimse yok.",
+    "close": "Kapat",
+    "previous": "Önceki",
+    "next": "Sonraki"
+  },
   "search": {
     "searchUser": "Kullanıcı ara",
     "follow": "Takip Et",
