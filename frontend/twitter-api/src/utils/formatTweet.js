@@ -5,6 +5,7 @@ const buildParent = (p) => {
   if (!p) return null
   return {
     id: p.id,
+    deleted: p.deleted === true,
     userId: p.user?.id || p.userId || null,
     user: getUserName(p.user || p),
     name: getDisplayName(p.user || p),
@@ -14,6 +15,7 @@ const buildParent = (p) => {
 
 export const formatTweet = (tweet) => ({
   id: tweet.id,
+  deleted: tweet.deleted === true,
   userId: tweet.user?.id || null,
   user: getUserName(tweet.user),
   name: getDisplayName(tweet.user),
@@ -32,6 +34,8 @@ export const formatTweet = (tweet) => ({
 
 export const formatRetweet = (retweet) => ({
   id: retweet.tweet?.id || retweet.id,
+  deleted: retweet.tweet?.deleted === true,
+  parent: buildParent(retweet.tweet?.parentTweet),
   userId: retweet.tweet?.user?.id || null,
   user: getUserName(retweet.tweet?.user),
   name: getDisplayName(retweet.tweet?.user),
@@ -39,7 +43,7 @@ export const formatRetweet = (retweet) => ({
   likes: retweet.tweet?.likeCount || 0,
   retweets: retweet.tweet?.retweetCount || 0,
   comments: retweet.tweet?.replyCount || 0,
-  parentTweetId: retweet.tweet?.parentTweetId || retweet.tweet?.parentId || retweet.tweet?.parent_id || retweet.tweet?.parent?.id || null,
+  parentTweetId: retweet.tweet?.parentTweetId || retweet.tweet?.parentTweet?.id || retweet.tweet?.parentId || retweet.tweet?.parent_id || retweet.tweet?.parent?.id || null,
   createdAt: retweet.createdAt || retweet.tweet?.createdAt,
   time: 'now',
   isLiked: retweet.tweet?.likedByCurrentUser || false,

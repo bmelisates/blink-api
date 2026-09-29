@@ -3,9 +3,11 @@ import { useState } from 'react'
 import UserList from './UserList'
 import ReplyForm from './ReplyForm'
 import './CommentItem.css'
+import { useTranslation } from '../hooks/useTranslation'
 
 function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdit, onDelete, onToggleReplies, onToggleLikes, onToggleRetweets, commentsData, depth = 0 }) {
   const [isEditing, setIsEditing] = useState(false)
+  const { t } = useTranslation()
   const [editContent, setEditContent] = useState(comment.content)
   const [isReplying, setIsReplying] = useState(false)
   const [showNestedReplies, setShowNestedReplies] = useState(false)
@@ -14,7 +16,7 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
 
   return (
     <div className="comment-item" style={{ marginLeft: depth > 0 ? '20px' : '0' }}>
-      <div className="comment-header">
+      {!comment.deleted && <div className="comment-header">
         {comment.userId ? (
           <Link
             to={String(comment.userId) === String(currentUserId) ? '/profile' : `/user/${comment.userId}`}
@@ -25,8 +27,8 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
         ) : (
           <div className="comment-user">@{comment.username}</div>
         )}
-      </div>
-      {isEditing ? (
+      </div>}
+      {isEditing && !comment.deleted ? (
         <div className="comment-edit-form">
           <textarea value={editContent} onChange={event => setEditContent(event.target.value)} />
           <button onClick={async () => {
@@ -36,11 +38,12 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
           }}>Kaydet</button>
           <button onClick={() => { setEditContent(comment.content); setIsEditing(false) }}>İptal</button>
         </div>
-      ) : <div className="comment-text">{comment.content}</div>}
+      ) : <div className="comment-text">{comment.deleted ? t('tweet.deleted') : comment.content}</div>}
       <div className="comment-actions">
         <div className="comment-action-group">
           <button 
             className="comment-action-btn reply"
+            disabled={comment.deleted}
             onClick={() => {
               setIsReplying(current => !current)
               setShowNestedReplies(true)
@@ -67,6 +70,7 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
         <div className="comment-action-group">
           <button 
             className={`comment-action-btn retweet ${comment.isRetweeted ? 'retweeted' : ''}`}
+            disabled={comment.deleted}
             onClick={() => onRetweet(comment.id)}
           >
             🔄 {comment.retweets || 0}
@@ -83,6 +87,7 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
         <div className="comment-action-group">
           <button 
             className={`comment-action-btn like ${comment.isLiked ? 'liked' : ''}`}
+            disabled={comment.deleted}
             onClick={() => onLike(comment.id)}
           >
             💜 <span className="action-count">{comment.likes || 0}</span>
@@ -96,7 +101,7 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
             </button>
           )}
         </div>
-        {comment.userId && currentUserId && Number(comment.userId) === Number(currentUserId) && !isEditing && (
+        {!comment.deleted && comment.userId && currentUserId && Number(comment.userId) === Number(currentUserId) && !isEditing && (
           <div className="comment-owner-actions">
             <button className="comment-action-btn" onClick={() => setIsEditing(true)} aria-label="Yanıtı düzenle">✏️</button>
             <button className="comment-action-btn" onClick={() => onDelete(comment.id)} aria-label="Yanıtı sil">❌</button>
@@ -115,7 +120,7 @@ function CommentItem({ comment, currentUserId, onLike, onRetweet, onReply, onEdi
       )}
       
       {/* Reply Form */}
-      {isReplying && (
+      {isReplying && !comment.deleted && (
         <ReplyForm
           placeholder="Yanıt yaz..."
           onSubmit={async (text) => {

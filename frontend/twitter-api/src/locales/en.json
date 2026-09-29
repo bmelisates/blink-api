@@ -21,6 +21,7 @@
     "followSuggestions": "Follow Suggestions"
   },
   "tweet": {
+    "deleted": "This post has been deleted.",
     "retweeted": "blinked",
     "replies": "Replies:",
     "replyPlaceholder": "Write a reply...",

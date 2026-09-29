@@ -1,3 +1,4 @@
+import { notifyTweetDeleted } from '../services/tweetEvents'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import './Home.css'
@@ -187,30 +188,8 @@ function Home() {
   // Seçilen tweet'i sistemden tamamen siler
   const handleDelete = async (tweetId) => {
     try {
-      const deletedTweet = [...tweets, ...retweets].find(tweet => tweet.id === tweetId)
-      const parentTweet = deletedTweet?.parentTweetId
-        ? [...tweets, ...retweets].find(tweet => tweet.id === deletedTweet.parentTweetId)
-        : null
       await api.delete(`/tweets/${tweetId}`)
-      setTweets(prev => prev.filter(tweet => tweet.id !== tweetId))
-      setRetweets(prev => prev.filter(tweet => tweet.id !== tweetId))
-
-      if (deletedTweet?.parentTweetId) {
-        const result = tweetCard.removeCommentFromState(tweetId)
-        // Yorum paneli açık değilken de bağımsız akıştaki child tweetin
-        // doğrudan bir ana tweete ait olup olmadığını kontrol ederiz.
-        const isDirectReply = !parentTweet?.parentTweetId
-        if (result.isTopLevelComment || isDirectReply) {
-          setTweets(prev => prev.map(tweet => tweet.id === deletedTweet.parentTweetId
-            ? { ...tweet, comments: Math.max(0, (tweet.comments || 0) - 1) }
-            : tweet
-          ))
-          setRetweets(prev => prev.map(tweet => tweet.id === deletedTweet.parentTweetId
-            ? { ...tweet, comments: Math.max(0, (tweet.comments || 0) - 1) }
-            : tweet
-          ))
-        }
-      }
+      notifyTweetDeleted(tweetId)
     } catch (error) {
       console.error('Error deleting tweet:', error)
     }

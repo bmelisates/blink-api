@@ -150,6 +150,16 @@ Manual browser verification: follow another profile, check both profile counters
 
 Messaging was manually verified with two local accounts on 2026-09-28: send a message, reload to confirm persistence, sign in as the recipient, verify the unread badges, open the conversation to clear them, send a reply, and return to the sender to verify the reply and read receipt. Both test messages remain in the local conversation. The combined follow/messaging automated run passed 40 tests; frontend lint and production build also passed. Multi-page history, concurrent browser sessions, network failures and mobile layouts still need broader manual coverage.
 
+## Post deletion
+
+Deleting a post or reply erases its content and removes its likes and retweets, while retaining its row and reply links with `deleted=true`. Timelines, profile posts and search exclude deleted posts. Threads keep a “Bu gönderi silindi” placeholder so replies remain accessible; reply counts include these placeholders. Deleted posts cannot be edited, liked, retweeted or replied to. Existing replies can still receive interactions. This behavior applies to post deletion; account deletion remains a separate cleanup operation.
+
+With the PostgreSQL test environment variables above, run `mvn.cmd "-Dtest=TweetDeletionIntegrationTest" test` from `backend`. These tests use a random `tweet_test_*` schema and cover nested replies, content removal, interaction cleanup, authorization and rejected interactions after deletion. Run `npm.cmd test` from `frontend/twitter-api` for session and deleted-parent state tests.
+
+Interaction review: like and retweet responses expose user IDs and usernames without email values. Duplicate interaction checks run after acquiring the post lock. Reply panels use the API's viewer-specific like/retweet flags, including nested replies, without a separate likes request per comment. `InteractionControllerTest` covers deletion ownership and anonymous mutations; `TweetDeletionIntegrationTest` also covers interaction privacy, viewer-specific counts/state and reply editing ownership.
+
+The post deletion UI was verified locally on 2026-09-28 by creating a temporary post and reply, deleting the parent, then reloading: the reply remained with the deleted-post placeholder. The test reply was kept for inspection.
+
 ## Project background
 
 Blink began as a Workintech backend exercise and was expanded into a full-stack application. The original assignment is preserved in [backend/README.md](backend/README.md).

@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { TWEET_DELETED, removeDeletedTweet } from '../services/tweetEvents'
 import api from '../services/api'
 
 export function useTimelineState() {
@@ -6,6 +7,15 @@ export function useTimelineState() {
   const [retweets, setRetweets] = useState([])
   const [editingTweet, setEditingTweet] = useState(null)
   const [editContent, setEditContent] = useState('')
+
+  useEffect(() => {
+    const deleted = event => {
+      setTweets(items => removeDeletedTweet(items, event.detail))
+      setRetweets(items => removeDeletedTweet(items, event.detail))
+    }
+    window.addEventListener(TWEET_DELETED, deleted)
+    return () => window.removeEventListener(TWEET_DELETED, deleted)
+  }, [])
 
   const timelineItems = useMemo(
     () => [...retweets, ...tweets].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)),

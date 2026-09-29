@@ -29,6 +29,9 @@ public class Tweet {
     @Column(length = 300, nullable = false)
     private String content;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 

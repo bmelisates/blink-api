@@ -21,6 +21,7 @@
     "followSuggestions": "Takip Önerileri"
   },
   "tweet": {
+    "deleted": "Bu gönderi silindi.",
     "retweeted": "blinkledi",
     "replies": "Yanıtlar:",
     "replyPlaceholder": "Yanıt yaz...",

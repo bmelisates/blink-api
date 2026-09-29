@@ -2,7 +2,6 @@ package com.workintech.twitter_api.service;
 
 import com.workintech.twitter_api.dto.RetweetRequest;
 import com.workintech.twitter_api.dto.RetweetResponse;
-import com.workintech.twitter_api.dto.TweetResponse;
 import com.workintech.twitter_api.dto.UserResponse;
 import com.workintech.twitter_api.entity.Retweet;
 import com.workintech.twitter_api.entity.Tweet;
@@ -45,39 +44,15 @@ public class RetweetServiceImpl implements RetweetService {
             UserResponse userResponse = new UserResponse(
                     retweet.getUser().getId(),
                     retweet.getUser().getUsername(),
-                    retweet.getUser().getEmail()
+                    null
             );
             response.setUser(userResponse);
         }
 
         // Tweet Entity'sinden TweetResponse DTO'suna
         if (retweet.getTweet() != null) {
-            TweetResponse tweetResponse = new TweetResponse();
-            tweetResponse.setId(retweet.getTweet().getId());
-            tweetResponse.setContent(retweet.getTweet().getContent());
-            tweetResponse.setCreatedAt(retweet.getTweet().getCreatedAt());
-            tweetResponse.setUpdatedAt(retweet.getTweet().getUpdatedAt());
-
-            // Tweet'i atan kullanıcı bilgisi
-            if (retweet.getTweet().getUser() != null) {
-                tweetResponse.setUser(new UserResponse(
-                        retweet.getTweet().getUser().getId(),
-                        retweet.getTweet().getUser().getUsername(),
-                        retweet.getTweet().getUser().getEmail()
-                ));
-            }
-
-            tweetResponse.setLikeCount(retweet.getTweet().getLikes().size());
-            tweetResponse.setRetweetCount(retweet.getTweet().getRetweets().size());
-            tweetResponse.setReplyCount(retweet.getTweet().getReplies().size());
-            tweetResponse.setLikedByCurrentUser(viewerUsername != null && retweet.getTweet().getLikes().stream()
-                    .anyMatch(like -> viewerUsername.equals(like.getUser().getUsername())));
-            tweetResponse.setRetweetedByCurrentUser(viewerUsername != null && retweet.getTweet().getRetweets().stream()
-                    .anyMatch(item -> viewerUsername.equals(item.getUser().getUsername())));
-
-            response.setTweet(tweetResponse);
+            response.setTweet(tweetService.findById(retweet.getTweet().getId(), viewerUsername));
         }
-
         // Retweet tarihi
         response.setCreatedAt(retweet.getCreatedAt());
 
@@ -115,7 +90,10 @@ public class RetweetServiceImpl implements RetweetService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public RetweetResponse createRetweet(Long userId, RetweetRequest request) {
+        // Serialize duplicate checks with other mutations of this post.
+        Tweet tweet = tweetService.findActiveEntityById(request.getTweetId());
         // 1. İş Kuralı: Kullanıcı aynı tweet'i önceden retweet etmiş mi?
         if (existsByUserIdAndTweetId(userId, request.getTweetId())) {
             throw new ResourceAlreadyExistsException("You have already retweeted this tweet");
@@ -123,7 +101,6 @@ public class RetweetServiceImpl implements RetweetService {
 
         // 2. Diğer servisler üzerinden Entity'leri bulma
         User user = userService.findEntityById(userId);
-        Tweet tweet = tweetService.findEntityById(request.getTweetId());
 
         Retweet retweet = new Retweet();
         retweet.setUser(user);

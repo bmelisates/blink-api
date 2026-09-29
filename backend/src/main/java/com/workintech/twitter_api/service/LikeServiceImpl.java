@@ -40,7 +40,7 @@ public class LikeServiceImpl implements LikeService {
             UserResponse userResponse = new UserResponse(
                     like.getUser().getId(),
                     like.getUser().getUsername(),
-                    like.getUser().getEmail()
+                    null
             );
             response.setUser(userResponse);
         }
@@ -57,7 +57,7 @@ public class LikeServiceImpl implements LikeService {
                 tweetResponse.setUser(new UserResponse(
                         like.getTweet().getUser().getId(),
                         like.getTweet().getUser().getUsername(),
-                        like.getTweet().getUser().getEmail()
+                        null
                 ));
             }
 
@@ -98,7 +98,10 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public LikeResponse createLike(Long userId, LikeRequest request) {
+        // Serialize duplicate checks with other mutations of this post.
+        Tweet tweet = tweetService.findActiveEntityById(request.getTweetId());
         // 1. İş Kuralı: Kullanıcı aynı tweet'i önceden likelamış mı?
         if (existsByUserIdAndTweetId(userId, request.getTweetId())) {
             throw new ResourceAlreadyExistsException("You have already liked this tweet");
@@ -106,7 +109,6 @@ public class LikeServiceImpl implements LikeService {
 
         // 2. Diğer servisler üzerinden Entity'leri bulma
         User user = userService.findEntityById(userId);
-        Tweet tweet = tweetService.findEntityById(request.getTweetId());
 
         Like like = new Like();
         like.setUser(user);

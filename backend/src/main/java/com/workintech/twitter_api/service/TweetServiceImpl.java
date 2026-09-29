@@ -17,6 +17,7 @@ import com.workintech.twitter_api.entity.User;
 import java.util.List;
 
 @Service
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class TweetServiceImpl implements TweetService {
     private final TweetRepository tweetRepository;
     private final UserService userService;
@@ -34,7 +35,6 @@ public class TweetServiceImpl implements TweetService {
 
         response.setId(user.getId());
         response.setUsername(user.getUsername());
-        response.setEmail(user.getEmail());
 
         return response;
     }
@@ -44,11 +44,12 @@ public class TweetServiceImpl implements TweetService {
         TweetResponse response = new TweetResponse();
 
         response.setId(tweet.getId());
-        response.setContent(tweet.getContent());
+        response.setDeleted(tweet.isDeleted());
+        response.setContent(tweet.isDeleted() ? null : tweet.getContent());
         response.setCreatedAt(tweet.getCreatedAt());
         response.setUpdatedAt(tweet.getUpdatedAt());
 
-        if (tweet.getUser() != null) {
+        if (!tweet.isDeleted() && tweet.getUser() != null) {
             response.setUser(convertToUserResponse(tweet.getUser()));
         }
 
@@ -94,6 +95,7 @@ public class TweetServiceImpl implements TweetService {
 
     // Tweet oluşturur.
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public TweetResponse createTweet(TweetRequest request, String username) {
         // Yeni tweet oluşturur
         Tweet tweet = new Tweet();
@@ -107,7 +109,7 @@ public class TweetServiceImpl implements TweetService {
         // Eğer başka bir tweet'e yanıt veriliyorsa (Reply)
         if (request.getParentTweetId() != null) {
             // Parent tweeti bulur
-            Tweet parentTweet = findEntityById(request.getParentTweetId());
+            Tweet parentTweet = findActiveEntityById(request.getParentTweetId());
             // Parent tweeti tweet'e atar
             tweet.setParentTweet(parentTweet);
         }
@@ -120,13 +122,15 @@ public class TweetServiceImpl implements TweetService {
 
     // Tweeti günceller.
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public TweetResponse updateTweet(Long id, TweetRequest request, String username) {
         // Tweeti bulur
-        Tweet existingTweet = tweetRepository.findById(id)
+        Tweet existingTweet = tweetRepository.findLockedById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Tweet not found"));
 
         // Mevcut kullanıcının bilgilerini alır
+        if (existingTweet.isDeleted()) throw new ResourceNotFoundException("Tweet has been deleted");
         User currentUser = userService.findEntityByUsername(username);
 
         // Tweet sahibi değilse  güncelleyemez.
@@ -143,9 +147,10 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void deleteTweet(Long tweetId, String username) {
 
-        Tweet tweet = tweetRepository.findById(tweetId)
+        Tweet tweet = tweetRepository.findLockedById(tweetId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Tweet not found"));
 
@@ -159,13 +164,19 @@ public class TweetServiceImpl implements TweetService {
                     "You are not allowed to delete this tweet");
         }
 
-        tweetRepository.delete(tweet);
+        if (tweet.isDeleted()) return;
+        // İçeriği kaldır, ilişkiyi koru: yanıtlar aynı parent ID'sini kullanmaya devam eder.
+        tweet.setContent("[deleted]");
+        tweet.setDeleted(true);
+        tweet.getLikes().clear();
+        tweet.getRetweets().clear();
+        tweetRepository.saveAndFlush(tweet);
     }
 
     // Keyword'ü içeren tweetleri listeler.
     @Override
     public List<TweetResponse> search(String keyword, String viewerUsername) {
-        return tweetRepository.findByContentContainingIgnoreCaseOrderByCreatedAtDesc(keyword)
+        return tweetRepository.findByDeletedFalseAndContentContainingIgnoreCaseOrderByCreatedAtDesc(keyword)
                 .stream()
                 .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
@@ -174,7 +185,7 @@ public class TweetServiceImpl implements TweetService {
     // Keyword'ü içeren tweetleri userId'ye göre listeler.(Sadece o kişinin tweetlerinde aramak istersek)
     @Override
     public List<TweetResponse> searchByUserId(Long userId, String keyword, String viewerUsername) {
-        return tweetRepository.findByUserIdAndContentContainingIgnoreCaseOrderByCreatedAtDesc(userId, keyword)
+        return tweetRepository.findByUserIdAndDeletedFalseAndContentContainingIgnoreCaseOrderByCreatedAtDesc(userId, keyword)
                 .stream()
                 .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
@@ -192,7 +203,7 @@ public class TweetServiceImpl implements TweetService {
     // userId'ye göre tweet sayısını bulur.
     @Override
     public long countByUserId(Long userId) {
-        return tweetRepository.countByUserId(userId);
+        return tweetRepository.countByUserIdAndDeletedFalse(userId);
     }
 
     // Bu id'de tweet mevcut mu?
@@ -205,6 +216,15 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public Tweet findEntityById(Long id) {
         return tweetRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Tweet not found"));
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public Tweet findActiveEntityById(Long id) {
+        Tweet tweet = tweetRepository.findLockedById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tweet not found"));
+        if (tweet.isDeleted()) throw new ResourceNotFoundException("Tweet has been deleted");
+        return tweet;
     }
 
 }

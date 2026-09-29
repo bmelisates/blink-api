@@ -30,4 +30,5 @@ public interface TweetService {
 
     // --- Entity Dönen Metot (Diğer Servislerin İç Kullanımı İçin) ---
     Tweet findEntityById(Long id);
+    Tweet findActiveEntityById(Long id);
 }

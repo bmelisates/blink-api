@@ -31,6 +31,7 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
           const p = response.data
           setFetchedParentTweet({
             id: p.id,
+            deleted: p.deleted === true,
             userId: p.user?.id || null,
             user: p.user?.username || 'unknown',
             name: p.user?.username || 'Unknown',
@@ -60,8 +61,8 @@ function TweetCard({ tweet, currentUserId, onLike, onRetweet, onDelete, onEdit, 
         {parentTweet && (
           <div className="parent-tweet" onClick={(e) => e.stopPropagation()}>
             <div className="parent-small">
-              <span className="parent-user">{parentTweet.name} @{parentTweet.user}</span>
-              <p className="parent-text">{parentTweet.content}</p>
+              {!parentTweet.deleted && <span className="parent-user">{parentTweet.name} @{parentTweet.user}</span>}
+              <p className="parent-text">{parentTweet.deleted ? t('tweet.deleted') : parentTweet.content}</p>
             </div>
           </div>
         )}

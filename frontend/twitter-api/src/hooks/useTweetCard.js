@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { TWEET_DELETED, notifyTweetDeleted } from '../services/tweetEvents'
+import { useEffect, useState } from 'react'
 import api from '../services/api'
+import { commentInteractionState } from '../utils/commentInteractionState'
 
 export const useTweetCard = () => {
   // ==================== STATE (DURUM) TANIMLAMALARI ====================
@@ -182,37 +184,26 @@ export const useTweetCard = () => {
   // Bir child tweet ana akıştan silindiğinde de açık yorum panellerini
   // güncel tutmak için, onu tüm yorum state'lerinden temizler.
   const removeCommentFromState = (commentId) => {
-    const isTopLevelComment = Object.values(commentsIndex)
-      .some(ids => ids.some(id => String(id) === String(commentId)))
-
-    setCommentsIndex(prev => Object.fromEntries(
-      Object.entries(prev).map(([key, ids]) => [
-        key,
-        ids.filter(id => String(id) !== String(commentId))
-      ])
-    ))
-
-    setCommentsData(prev => {
-      const next = { ...prev }
-      delete next[commentId]
-
-      Object.keys(next).forEach(id => {
-        const comment = next[id]
-        if ((comment.replies || []).some(replyId => String(replyId) === String(commentId))) {
-          next[id] = {
-            ...comment,
-            replies: comment.replies.filter(replyId => String(replyId) !== String(commentId)),
-            comments: Math.max(0, (comment.comments || 0) - 1)
-          }
-        }
-      })
-
-      return next
-    })
-
-    return { isTopLevelComment }
+    setCommentsData(previous => previous[commentId] ? {
+      ...previous,
+      [commentId]: { ...previous[commentId], deleted: true, content: null, userId: null,
+        username: null, likes: 0, retweets: 0, isLiked: false, isRetweeted: false,
+        likesUsers: [], retweetsUsers: [] }
+    } : previous)
+    // Yer tutucu ve alt yanıtlar kaldığı için thread sayısı değişmez.
+    return { isTopLevelComment: false }
   }
 
+  useEffect(() => {
+    const deleted = event => setCommentsData(previous => previous[event.detail] ? {
+      ...previous,
+      [event.detail]: { ...previous[event.detail], deleted: true, content: null, userId: null,
+        username: null, likes: 0, retweets: 0, isLiked: false, isRetweeted: false,
+        likesUsers: [], retweetsUsers: [] }
+    } : previous)
+    window.addEventListener(TWEET_DELETED, deleted)
+    return () => window.removeEventListener(TWEET_DELETED, deleted)
+  }, [])
   // Tweetin altındaki yorumları açıp kapatır ve API'den getirir
   const handleToggleComments = async (tweetId, isRetweet) => {
     const stateKey = isRetweet ? `retweet_${tweetId}` : tweetId
@@ -226,25 +217,16 @@ export const useTweetCard = () => {
       try {
         const response = await api.get(`/tweets/${tweetId}/replies`)
 
-        // Her bir yorumun kendi beğeni durumunu kontrol et
-        const comments = await Promise.all(response.data.map(async comment => {
-          let isLiked = false
-          try {
-            const likesResponse = await api.get(`/likes/tweet/${comment.id}`)
-            isLiked = likesResponse.data.some(like => like.user?.id === parseInt(currentUserId))
-          } catch (error) {
-            console.error('Error fetching comment like status:', error)
-          }
-
+        const comments = response.data.map(comment => {
           return {
             id: comment.id,
             userId: comment.user?.id,
             username: comment.user?.username,
-            content: comment.content,
+            content: comment.content, deleted: comment.deleted === true,
             likes: comment.likeCount || 0,
             retweets: comment.retweetCount || 0,
             comments: comment.replyCount || 0,
-            isLiked: isLiked,
+            ...commentInteractionState(comment),
             replies: [],
             expanded: false,
             showLikes: false,
@@ -254,7 +236,7 @@ export const useTweetCard = () => {
             retweetsUsers: [],
             commentsUsers: []
           }
-        }))
+        })
 
         // Yorum verilerini dictionary (hash) yapısına kaydet
         const newCommentsData = { ...commentsData }
@@ -277,6 +259,7 @@ export const useTweetCard = () => {
     try {
       await api.delete(`/tweets/${commentId}`)
 
+      notifyTweetDeleted(commentId)
       return { deleted: true, ...removeCommentFromState(commentId) }
     } catch (error) {
       console.error('Error deleting comment:', error)
@@ -426,28 +409,16 @@ export const useTweetCard = () => {
                   const newReplyIds = []
                   const newRepliesData = { ...commentsData }
 
-                  const repliesWithLikeStatus = await Promise.all(response.data.map(async reply => {
-                    let isLiked = false
-                    try {
-                      const likesResponse = await api.get(`/likes/tweet/${reply.id}`)
-                      isLiked = likesResponse.data.some(like => like.user?.id === parseInt(currentUserId || '0'))
-                    } catch (error) {
-                      console.error('Error fetching reply like status:', error)
-                    }
-
-                    return { ...reply, isLiked: isLiked }
-                  }))
-
-                  repliesWithLikeStatus.forEach(reply => {
+                  response.data.forEach(reply => {
                     const replyData = {
                       id: reply.id,
                       userId: reply.user?.id,
                       username: reply.user?.username,
-                      content: reply.content,
+                      content: reply.content, deleted: reply.deleted === true,
                       likes: reply.likeCount || 0,
                       retweets: reply.retweetCount || 0,
                       comments: reply.replyCount || 0,
-                      isLiked: reply.isLiked,
+                      ...commentInteractionState(reply),
                       replies: [],
                       expanded: false,
                       showLikes: false,
@@ -603,11 +574,11 @@ export const useTweetCard = () => {
                     id: reply.id,
                     userId: reply.user?.id,
                     username: reply.user?.username,
-                    content: reply.content,
+                    content: reply.content, deleted: reply.deleted === true,
                     likes: reply.likeCount || 0,
                     retweets: reply.retweetCount || 0,
                     comments: reply.replyCount || 0,
-                    isLiked: false,
+                    ...commentInteractionState(reply),
                     replies: [],
                     expanded: false,
                     showLikes: false,

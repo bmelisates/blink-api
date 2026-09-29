@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 public class TweetResponse {
     private Long id;
     private String content;
+    private boolean deleted;
 
     // Oluşturma ve update tarihleri
     private OffsetDateTime createdAt;
