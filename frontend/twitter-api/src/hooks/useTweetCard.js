@@ -1,4 +1,4 @@
-import { TWEET_DELETED, notifyTweetDeleted } from '../services/tweetEvents'
+import { TWEET_DELETED, notifyTweetDeleted, TWEET_INTERACTIONS_UPDATED, notifyTweetInteractions } from '../services/tweetEvents'
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import { commentInteractionState } from '../utils/commentInteractionState'
@@ -68,6 +68,11 @@ export const useTweetCard = () => {
     } catch (error) {
       console.error('Error handling retweet:', error)
       return { action: 'failed' }
+    } finally {
+      try {
+        const { data } = await api.get(`/tweets/${tweetId}`)
+        notifyTweetInteractions(tweetId, { retweets: data.retweetCount, isRetweeted: data.retweetedByCurrentUser })
+      } catch (error) { console.error('Error refreshing retweet:', error) }
     }
   }
 
@@ -202,7 +207,13 @@ export const useTweetCard = () => {
         likesUsers: [], retweetsUsers: [] }
     } : previous)
     window.addEventListener(TWEET_DELETED, deleted)
-    return () => window.removeEventListener(TWEET_DELETED, deleted)
+    const updated = ({ detail: { id, changes } }) => setCommentsData(previous => previous[id]
+      ? { ...previous, [id]: { ...previous[id], ...changes } } : previous)
+    window.addEventListener(TWEET_INTERACTIONS_UPDATED, updated)
+    return () => {
+      window.removeEventListener(TWEET_DELETED, deleted)
+      window.removeEventListener(TWEET_INTERACTIONS_UPDATED, updated)
+    }
   }, [])
   // Tweetin altındaki yorumları açıp kapatır ve API'den getirir
   const handleToggleComments = async (tweetId, isRetweet) => {
@@ -290,6 +301,11 @@ export const useTweetCard = () => {
       }
     } catch (error) {
       console.error('Error handling comment like:', error)
+    } finally {
+      try {
+        const { data } = await api.get(`/tweets/${commentId}`)
+        notifyTweetInteractions(commentId, { likes: data.likeCount, isLiked: data.likedByCurrentUser })
+      } catch (error) { console.error('Error refreshing comment like:', error) }
     }
   }
 
@@ -321,6 +337,11 @@ export const useTweetCard = () => {
       }
     } catch (error) {
       console.error('Error handling comment retweet:', error)
+    } finally {
+      try {
+        const { data } = await api.get(`/tweets/${commentId}`)
+        notifyTweetInteractions(commentId, { retweets: data.retweetCount, isRetweeted: data.retweetedByCurrentUser })
+      } catch (error) { console.error('Error refreshing comment retweet:', error) }
     }
   }
 

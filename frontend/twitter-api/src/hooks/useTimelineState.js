@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { TWEET_DELETED, removeDeletedTweet } from '../services/tweetEvents'
+import { TWEET_DELETED, removeDeletedTweet, TWEET_INTERACTIONS_UPDATED, notifyTweetInteractions, updateTweetInteractions } from '../services/tweetEvents'
 import api from '../services/api'
 
 export function useTimelineState() {
@@ -14,7 +14,15 @@ export function useTimelineState() {
       setRetweets(items => removeDeletedTweet(items, event.detail))
     }
     window.addEventListener(TWEET_DELETED, deleted)
-    return () => window.removeEventListener(TWEET_DELETED, deleted)
+    const updated = event => {
+      setTweets(items => updateTweetInteractions(items, event.detail))
+      setRetweets(items => updateTweetInteractions(items, event.detail))
+    }
+    window.addEventListener(TWEET_INTERACTIONS_UPDATED, updated)
+    return () => {
+      window.removeEventListener(TWEET_DELETED, deleted)
+      window.removeEventListener(TWEET_INTERACTIONS_UPDATED, updated)
+    }
   }, [])
 
   const timelineItems = useMemo(
@@ -57,6 +65,8 @@ export function useTimelineState() {
       } else {
         await api.post('/likes', { tweetId })
       }
+      const { data } = await api.get(`/tweets/${tweetId}`)
+      notifyTweetInteractions(tweetId, { likes: data.likeCount, isLiked: data.likedByCurrentUser })
     } catch (error) {
       updateItem(tweetId, item => ({
         ...item,

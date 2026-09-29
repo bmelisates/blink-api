@@ -1,4 +1,4 @@
-import { notifyTweetDeleted } from '../services/tweetEvents'
+import { notifyTweetDeleted, notifyTweetInteractions } from '../services/tweetEvents'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import './Home.css'
@@ -182,6 +182,11 @@ function Home() {
       }
     } catch (error) {
       console.error('Error handling retweet:', error)
+    } finally {
+      try {
+        const { data } = await api.get(`/tweets/${tweetId}`)
+        notifyTweetInteractions(tweetId, { retweets: data.retweetCount, isRetweeted: data.retweetedByCurrentUser })
+      } catch (error) { console.error('Error refreshing retweet:', error) }
     }
   }
 
