@@ -1,0 +1,10 @@
+.server-ready-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+.server-ready-card { width: 100%; max-width: 440px; padding: 28px; box-sizing: border-box; border-radius: 24px; background: #fff; color: #303044; text-align: center; box-shadow: 0 8px 32px #56299015; }
+.server-ready-logo { display: block; width: 155px; max-width: 100%; margin: 26px auto; }
+.server-ready-card h1 { font-size: 24px; }
+.server-ready-card p { font-size: 16px; line-height: 1.65; color: #626274; }
+.server-ready-card button { cursor: pointer; }
+.server-ready-card > button { border: 0; border-radius: 24px; padding: 12px 24px; background: #802ce9; color: white; font-weight: 600; }
+.server-ready-spinner { margin: 24px auto 4px; width: 26px; height: 26px; border: 3px solid #eadcf9; border-top-color: #802ce9; border-radius: 50%; animation: server-ready-spin 1s linear infinite; }
+@keyframes server-ready-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .server-ready-spinner { animation: none; } }

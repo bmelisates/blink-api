@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { TimeProvider } from './contexts/TimeContext'
 import './App.css'
+import ServerReadyGate from './components/ServerReadyGate'
 
 const Home = lazy(() => import('./pages/Home'))
 const Register = lazy(() => import('./pages/Register'))
@@ -21,6 +22,7 @@ function App() {
       <TimeProvider>
         <BrowserRouter>
           <ToastContainer position="top-right" />
+          <ServerReadyGate>
           <Suspense fallback={<div className="route-loading">Yükleniyor...</div>}>
             <Routes>
             <Route path="/" element={<Login />} />
@@ -53,6 +55,7 @@ function App() {
             />
             </Routes>
           </Suspense>
+          </ServerReadyGate>
         </BrowserRouter>
       </TimeProvider>
     </LanguageProvider>

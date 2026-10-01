@@ -59,6 +59,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // Tweetleri okumak herkes için açık.
+                        .requestMatchers(HttpMethod.GET, "/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/tweets/**").permitAll()
 
                         // Kullanıcı silme işlemini authentication gerektirir (kendi hesabını silebilir, ADMIN herkesi silebilir).

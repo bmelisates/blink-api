@@ -58,6 +58,35 @@ npm.cmd run dev
 
 Open <http://localhost:5173>. The API runs on port 8080. The local frontend origin allowed by CORS is `http://localhost:5173`.
 
+## Portfolio deployment
+
+The portfolio uses Vercel for the frontend, a Render Free web service for the Java API, and Neon for PostgreSQL. The API can sleep when idle. On initial load, the frontend checks `GET /health`, explains the cold start, and continues automatically once the API and database respond. A failed connection offers a retry; writes are never automatically retried.
+
+Configure these environment variables on Render (Docker build from `backend`):
+
+```dotenv
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:postgresql://YOUR_NEON_POOLER_HOST/blink_demo?sslmode=require&connectTimeout=10&socketTimeout=30
+SPRING_DATASOURCE_USERNAME=YOUR_DATABASE_ROLE
+SPRING_DATASOURCE_PASSWORD=YOUR_DATABASE_PASSWORD
+JWT_SECRET=YOUR_RANDOM_SECRET_OF_AT_LEAST_32_BYTES
+```
+
+Use `/health` as the Render health check path. The production profile reads `PORT` (default 10000), limits the database pool to five connections, and disables SQL debug logging. Schema creation/update currently uses Hibernate; versioned migrations are future work.
+
+On Vercel, use `frontend/twitter-api` as the root directory and set `VITE_API_URL` to the Render API origin before building. The allowed production frontend origin is `https://blink-social.vercel.app`; update the backend CORS configuration if hosting under another origin.
+
+### Sample data
+
+Use a **separate, empty database** with the application's schema initialized, then run:
+
+```powershell
+# Set PGHOST, PGDATABASE, PGUSER, PGPASSWORD and PGSSLMODE=require in your terminal.
+psql -v ON_ERROR_STOP=1 -f backend/db/seed-portfolio.sql
+```
+
+The transactional seed refuses databases containing users or posts and never deletes existing data. It creates six fictional users, eight posts, five replies, likes, retweets, follows and two conversations. The intentionally public demo account is **`demo` / `BlinkDemo2026!`**, with the ordinary `USER` role. Other sample accounts have randomly generated passwords. Demo changes are shared and persisted on the server; this is not an isolated browser-only sandbox. Do not enter private information in the shared account. Visitors can also register their own accounts.
+
 ## Follow API
 
 Authentication uses signed, seven-day access tokens whose subject is the immutable user ID. Tokens also carry an access-token format marker and the user's `token_version`. Password updates increment that version, invalidating previous tokens on subsequent requests. Existing databases receive the version column with a default of zero through the current Hibernate development schema update.
