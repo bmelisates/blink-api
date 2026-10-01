@@ -1,6 +1,39 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { probeServer, waitForServer } from '../src/services/serverReadiness.js'
+import { probeServer, waitForServer, SERVER_STARTUP_TIMEOUT_MS } from '../src/services/serverReadiness.js'
+
+test('a three-minute cold start continues automatically past the old attempt limit', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  let calls = 0
+  let ready = false
+  const result = waitForServer({ signal: new AbortController().signal,
+    probe: async () => { calls++; return ready } })
+  for (let elapsed = 0; elapsed < 180000; elapsed += 2500) {
+    await Promise.resolve()
+    t.mock.timers.tick(2500)
+  }
+  ready = true
+  await Promise.resolve()
+  t.mock.timers.tick(2500)
+  assert.equal(await result, true)
+  assert.ok(calls > 12)
+})
+
+test('the startup deadline cancels retries even when the service stays unavailable', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const controller = new AbortController()
+  const deadline = setTimeout(() => controller.abort(), SERVER_STARTUP_TIMEOUT_MS)
+  let calls = 0
+  const result = waitForServer({ signal: controller.signal,
+    probe: async () => { calls++; return false } })
+  await Promise.resolve()
+  t.mock.timers.tick(SERVER_STARTUP_TIMEOUT_MS)
+  assert.equal(await result, false)
+  const stoppedAt = calls
+  t.mock.timers.tick(10000)
+  assert.equal(calls, stoppedAt)
+  clearTimeout(deadline)
+})
 
 test('a waking service retries and continues once ready', async () => {
   let calls = 0

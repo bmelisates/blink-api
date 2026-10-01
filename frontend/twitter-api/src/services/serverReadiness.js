@@ -8,8 +8,11 @@ export async function probeServer(baseUrl, signal) {
   return data.status === 'UP'
 }
 
+export const SERVER_STARTUP_TIMEOUT_MS = 5 * 60 * 1000
+
+// The caller's abort deadline controls the wait, even when 503 responses arrive quickly.
 // Only the read-only health request is retried, never login or other mutations.
-export async function waitForServer({ probe, signal, delay = 2500, attempts = 12, onAttempt = () => {} }) {
+export async function waitForServer({ probe, signal, delay = 2500, attempts = Infinity, onAttempt = () => {} }) {
   for (let attempt = 0; attempt < attempts; attempt++) {
     if (signal.aborted) return false
     onAttempt(attempt)
