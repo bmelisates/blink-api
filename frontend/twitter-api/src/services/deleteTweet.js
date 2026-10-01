@@ -5,28 +5,35 @@ import { notifyTweetDeleted, notifyTweetInteractions } from './tweetEvents'
 const asComment = reply => ({ ...formatTweet(reply), username: reply.user?.username })
 
 export async function deleteTweet(id) {
-  // Capture the visible parent before erasing the reply so every view can be updated.
+  // Keep the ancestor chain so empty deleted branches disappear in every open view.
   const { data: tweet } = await api.get(`/tweets/${id}`)
-  const children = tweet.parentTweet && tweet.replyCount > 0
-    ? (await api.get(`/tweets/${id}/replies`)).data.map(asComment) : []
+  const ancestors = []
+  for (let parent = tweet.parentTweet; parent; parent = parent.parentTweet) ancestors.push(parent)
   await api.delete(`/tweets/${id}`)
-  if (!tweet.parentTweet) {
-    notifyTweetDeleted(id)
-    return
-  }
-  const parentId = tweet.parentTweet.id
   try {
-    const [{ data: parent }, { data: replies }] = await Promise.all([
-      api.get(`/tweets/${parentId}`), api.get(`/tweets/${parentId}/replies`)
+    const [{ data: deleted }, threads] = await Promise.all([
+      api.get(`/tweets/${id}`),
+      Promise.all(ancestors.map(async ancestor => {
+        const [{ data: parent }, { data: replies }] = await Promise.all([
+          api.get(`/tweets/${ancestor.id}`), api.get(`/tweets/${ancestor.id}/replies`)
+        ])
+        return { parent: formatTweet(parent), replies: replies.map(asComment) }
+      }))
     ])
-    notifyTweetDeleted(id, formatTweet(parent), replies.map(asComment), children)
-    notifyTweetInteractions(parentId, { comments: parent.replyCount })
+    notifyTweetDeleted(id, deleted.replyCount > 0, threads)
+    for (const { parent } of threads) notifyTweetInteractions(parent.id, { comments: parent.comments })
   } catch (error) {
     // A successful delete stays successful even if refreshing the thread fails.
-    const parent = formatTweet(tweet.parentTweet)
-    parent.comments = Math.max(0, parent.comments - 1 + (tweet.replyCount || 0))
-    notifyTweetDeleted(id, parent, undefined, children)
-    notifyTweetInteractions(parentId, { comments: parent.comments })
+    const keepPlaceholder = tweet.replyCount > 0
+    let removedChild = !keepPlaceholder
+    const threads = ancestors.map(ancestor => {
+      const parent = formatTweet(ancestor)
+      if (removedChild) parent.comments = Math.max(0, parent.comments - 1)
+      removedChild = removedChild && parent.deleted && parent.comments === 0
+      return { parent }
+    })
+    notifyTweetDeleted(id, keepPlaceholder, threads)
+    for (const { parent } of threads) notifyTweetInteractions(parent.id, { comments: parent.comments })
     console.error('Error refreshing thread after deletion:', error)
   }
 }

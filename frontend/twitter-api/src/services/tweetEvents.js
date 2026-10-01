@@ -5,41 +5,52 @@ export const notifyTweetInteractions = (id, changes) => window.dispatchEvent(
 
 export const updateTweetInteractions = (items, { id, changes }) => items.map(item =>
   String(item.id) === String(id) ? { ...item, ...changes } : item)
-export const notifyTweetDeleted = (id, parent, replies, children = []) => window.dispatchEvent(
-  new CustomEvent(TWEET_DELETED, { detail: { id, parent, replies, children } }))
+export const notifyTweetDeleted = (id, keepPlaceholder = false, threads = []) => window.dispatchEvent(
+  new CustomEvent(TWEET_DELETED, { detail: { id, keepPlaceholder, threads } }))
 
-export function removeDeletedTweet(items, id, parent = { id, deleted: true, content: null }) {
+export function removeDeletedTweet(items, id) {
   return items.filter(item => String(item.id) !== String(id)).map(item =>
     String(item.parentTweetId) === String(id)
-      ? { ...item, parentTweetId: parent.id, parent } : item)
+      ? { ...item, parent: { id, deleted: true, content: null } } : item)
 }
 
-const replaceDeletedId = (ids, id, children) => ids.flatMap(replyId =>
-  String(replyId) === String(id) ? children.map(child => child.id) : [replyId])
+const hiddenCommentIds = ({ id, keepPlaceholder, threads = [] }) => new Set([
+  ...(!keepPlaceholder ? [String(id)] : []),
+  ...threads.filter(({ parent }) => parent.deleted && parent.parentTweetId && parent.comments === 0)
+    .map(({ parent }) => String(parent.id))
+])
 
-export function removeDeletedCommentData(previous, { id, parent, replies, children = [] }) {
+const redactComment = comment => ({ ...comment, deleted: true, content: null, userId: null,
+  username: null, user: null, name: null, likes: 0, retweets: 0, isLiked: false, isRetweeted: false,
+  likesUsers: [], retweetsUsers: [], showLikes: false, showRetweets: false })
+
+export function removeDeletedCommentData(previous, detail) {
+  const { id, keepPlaceholder, threads = [] } = detail
+  const hidden = hiddenCommentIds(detail)
   const next = { ...previous }
-  delete next[id]
-  for (const [key, comment] of Object.entries(next)) {
-    next[key] = { ...comment, replies: replaceDeletedId(comment.replies || [], id, children) }
-  }
-  for (const child of children) {
-    next[child.id] = { replies: [], ...next[child.id], ...child, parentTweetId: parent.id, parent }
-  }
-  if (parent && next[parent.id]) next[parent.id] = { ...next[parent.id], comments: parent.comments }
-  if (replies) {
-    for (const reply of replies) {
-      next[reply.id] = { replies: [], ...next[reply.id], ...reply }
+  if (keepPlaceholder && next[id]) next[id] = redactComment(next[id])
+  for (const { parent, replies } of threads) {
+    for (const reply of replies || []) {
+      const merged = { replies: [], ...next[reply.id], ...reply }
+      next[reply.id] = reply.deleted ? redactComment(merged) : merged
     }
     if (next[parent.id]) {
-      next[parent.id] = { ...next[parent.id], comments: parent.comments, replies: replies.map(reply => reply.id) }
+      next[parent.id] = { ...next[parent.id], comments: parent.comments,
+        ...(replies ? { replies: replies.map(reply => reply.id) } : {}) }
     }
+  }
+  for (const [key, comment] of Object.entries(next)) {
+    if (hidden.has(String(key))) delete next[key]
+    else next[key] = { ...comment, replies: (comment.replies || []).filter(replyId => !hidden.has(String(replyId))) }
   }
   return next
 }
 
-export function removeDeletedCommentIndex(previous, { id, parent, replies, children = [] }) {
-  return Object.fromEntries(Object.entries(previous).map(([key, ids]) => [key,
-    replies && (key === String(parent.id) || key === `retweet_${parent.id}`)
-      ? replies.map(reply => reply.id) : replaceDeletedId(ids, id, children)]))
+export function removeDeletedCommentIndex(previous, detail) {
+  const hidden = hiddenCommentIds(detail)
+  return Object.fromEntries(Object.entries(previous).map(([key, ids]) => {
+    const thread = detail.threads?.find(({ parent }) => key === String(parent.id) || key === `retweet_${parent.id}`)
+    const updated = thread?.replies ? thread.replies.map(reply => reply.id) : ids
+    return [key, updated.filter(replyId => !hidden.has(String(replyId)))]
+  }))
 }

@@ -56,10 +56,7 @@ public class TweetServiceImpl implements TweetService {
         }
 
         Tweet parent = tweet.getParentTweet();
-        // Silinen yanıtları atla; silinen ana gönderi konuşmanın yer tutucusu olarak kalır.
-        while (parent != null && parent.isDeleted() && parent.getParentTweet() != null) {
-            parent = parent.getParentTweet();
-        }
+        // Alt yanıtların bağlamı için silinen üst gönderinin kimliğini koru.
         if (parent != null) {
             response.setParentTweet(convertToResponse(parent, viewerUsername));
         }
@@ -214,7 +211,9 @@ public class TweetServiceImpl implements TweetService {
     }
 
     private Stream<Tweet> visibleReply(Tweet reply) {
-        return reply.isDeleted() ? visibleReplies(reply) : Stream.of(reply);
+        // Silinen yapraklar görünmez; yaşayan alt yanıtı olan kutular yer tutucu kalır.
+        return !reply.isDeleted() || visibleReplies(reply).findAny().isPresent()
+                ? Stream.of(reply) : Stream.empty();
     }
 
     // userId'ye göre tweet sayısını bulur.

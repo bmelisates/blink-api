@@ -14,7 +14,7 @@ function SearchTweet() {
   const tweetSearch = useSearch('/tweets/search', formatTweet)
   const { setResults } = tweetSearch
   useEffect(() => {
-    const deleted = ({ detail }) => setResults(items => removeDeletedTweet(items, detail.id, detail.parent))
+    const deleted = ({ detail }) => setResults(items => removeDeletedTweet(items, detail.id))
     const updated = ({ detail }) => setResults(items => updateTweetInteractions(items, detail))
     window.addEventListener(TWEET_DELETED, deleted)
     window.addEventListener(TWEET_INTERACTIONS_UPDATED, updated)
