@@ -31,8 +31,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public UserResponse findById(@PathVariable Long id) {
-        return userService.findById(id);
+    public UserResponse findById(@PathVariable Long id, Authentication authentication) {
+        return withOwnEmail(userService.findById(id), authentication);
     }
 
     @PostMapping("/register")
@@ -50,7 +50,11 @@ public class UserController {
             throw new AccessDeniedException("You can only update your own profile");
         }
 
-        return userService.updateUser(id, request);
+        UserResponse response = userService.updateUser(id, request);
+        if (currentUser.getId().equals(id)) {
+            response.setEmail(userService.findEntityById(id).getEmail());
+        }
+        return response;
     }
 
     @DeleteMapping("/{id}")
@@ -67,17 +71,30 @@ public class UserController {
     }
 
     @GetMapping("/username/{username}")
-    public UserResponse findByUsername(@PathVariable String username) {
-        return userService.findByUsername(username);
+    public UserResponse findByUsername(@PathVariable String username, Authentication authentication) {
+        return withOwnEmail(userService.findByUsername(username), authentication);
     }
 
     @GetMapping("/email/{email}")
-    public UserResponse findByEmail(@PathVariable String email) {
-        return userService.findByEmail(email);
+    public UserResponse findByEmail(@PathVariable String email, Authentication authentication) {
+        var currentUser = userService.findEntityByUsername(authentication.getName());
+        // Başkasının e-postasını sorgulayarak hesap kimliğini öğrenmeyi de engelle.
+        if (!email.equals(currentUser.getEmail())) {
+            throw new AccessDeniedException("You can only look up your own email");
+        }
+        return withOwnEmail(userService.findById(currentUser.getId()), authentication);
     }
 
     @GetMapping("/search")
     public List<UserResponse> searchUsers(@RequestParam String keyword) {
         return userService.searchUsers(keyword);
+    }
+
+    private UserResponse withOwnEmail(UserResponse response, Authentication authentication) {
+        var currentUser = userService.findEntityByUsername(authentication.getName());
+        if (currentUser.getId().equals(response.getId())) {
+            response.setEmail(currentUser.getEmail());
+        }
+        return response;
     }
 }

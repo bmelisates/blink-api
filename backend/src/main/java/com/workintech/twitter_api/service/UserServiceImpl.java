@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
 
         response.setId(user.getId());
         response.setUsername(user.getUsername());
-        response.setEmail(user.getEmail());
+        // Genel profil, liste ve arama yanıtları özel hesap bilgisi içermez.
 
         return response;
     }

@@ -1,5 +1,6 @@
 package com.workintech.twitter_api.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import lombok.Setter;
 public class UserResponse {
     private Long id;
     private String username;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String email;
 
 }

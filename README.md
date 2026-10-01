@@ -89,6 +89,8 @@ The transactional seed refuses databases containing users or posts and never del
 
 ## Follow API
 
+User lists and search results contain public profile fields only. Individual user profiles and update responses include an email address only for the authenticated account owner, including when the viewer is an admin. Email lookup is restricted to the caller's own address; other addresses return 403 without looking up the target account. Privacy regression tests: `mvn.cmd "-Dtest=UserPrivacyTest" test` from `backend`.
+
 Authentication uses signed, seven-day access tokens whose subject is the immutable user ID. Tokens also carry an access-token format marker and the user's `token_version`. Password updates increment that version, invalidating previous tokens on subsequent requests. Existing databases receive the version column with a default of zero through the current Hibernate development schema update.
 
 Username-based tokens from earlier versions are intentionally rejected; users must sign in again after this update. Logout removes local credentials (also reflected in other tabs); it does not revoke an already copied token on the server. Password changes do revoke previous tokens. The frontend clears the active session on expiry or an authenticated 401 response, without letting a late response from a previous login clear a newer session. Server signature/expiry/version checks remain authoritative.
