@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { TWEET_DELETED, TWEET_INTERACTIONS_UPDATED, removeDeletedTweet, updateTweetInteractions } from '../services/tweetEvents'
 import './SearchTweet.css'
 import { useTweetCard } from '../hooks/useTweetCard'
 import TweetList from '../components/TweetList'
@@ -10,6 +12,17 @@ import useSearch from '../hooks/useSearch'
 
 function SearchTweet() {
   const tweetSearch = useSearch('/tweets/search', formatTweet)
+  const { setResults } = tweetSearch
+  useEffect(() => {
+    const deleted = ({ detail }) => setResults(items => removeDeletedTweet(items, detail.id, detail.parent))
+    const updated = ({ detail }) => setResults(items => updateTweetInteractions(items, detail))
+    window.addEventListener(TWEET_DELETED, deleted)
+    window.addEventListener(TWEET_INTERACTIONS_UPDATED, updated)
+    return () => {
+      window.removeEventListener(TWEET_DELETED, deleted)
+      window.removeEventListener(TWEET_INTERACTIONS_UPDATED, updated)
+    }
+  }, [setResults])
   const searchContainerRef = useClickOutside(tweetSearch.clearResults)
   const navigate = useNavigate()
   const { t } = useTranslation()

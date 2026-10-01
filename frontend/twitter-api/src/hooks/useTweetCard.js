@@ -1,4 +1,5 @@
-import { TWEET_DELETED, notifyTweetDeleted, TWEET_INTERACTIONS_UPDATED, notifyTweetInteractions } from '../services/tweetEvents'
+import { TWEET_DELETED, removeDeletedCommentData, removeDeletedCommentIndex, TWEET_INTERACTIONS_UPDATED, notifyTweetInteractions } from '../services/tweetEvents'
+import { deleteTweet } from '../services/deleteTweet'
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import { commentInteractionState } from '../utils/commentInteractionState'
@@ -186,26 +187,11 @@ export const useTweetCard = () => {
     }
   }
 
-  // Bir child tweet ana akıştan silindiğinde de açık yorum panellerini
-  // güncel tutmak için, onu tüm yorum state'lerinden temizler.
-  const removeCommentFromState = (commentId) => {
-    setCommentsData(previous => previous[commentId] ? {
-      ...previous,
-      [commentId]: { ...previous[commentId], deleted: true, content: null, userId: null,
-        username: null, likes: 0, retweets: 0, isLiked: false, isRetweeted: false,
-        likesUsers: [], retweetsUsers: [] }
-    } : previous)
-    // Yer tutucu ve alt yanıtlar kaldığı için thread sayısı değişmez.
-    return { isTopLevelComment: false }
-  }
-
   useEffect(() => {
-    const deleted = event => setCommentsData(previous => previous[event.detail] ? {
-      ...previous,
-      [event.detail]: { ...previous[event.detail], deleted: true, content: null, userId: null,
-        username: null, likes: 0, retweets: 0, isLiked: false, isRetweeted: false,
-        likesUsers: [], retweetsUsers: [] }
-    } : previous)
+    const deleted = ({ detail }) => {
+      setCommentsData(previous => removeDeletedCommentData(previous, detail))
+      setCommentsIndex(previous => removeDeletedCommentIndex(previous, detail))
+    }
     window.addEventListener(TWEET_DELETED, deleted)
     const updated = ({ detail: { id, changes } }) => setCommentsData(previous => previous[id]
       ? { ...previous, [id]: { ...previous[id], ...changes } } : previous)
@@ -268,10 +254,9 @@ export const useTweetCard = () => {
   // Belirli bir yorumu silme fonksiyonu
   const handleDeleteComment = async (commentId) => {
     try {
-      await api.delete(`/tweets/${commentId}`)
-
-      notifyTweetDeleted(commentId)
-      return { deleted: true, ...removeCommentFromState(commentId) }
+      await deleteTweet(commentId)
+      // Counts are synchronized from the server through the interaction event.
+      return { deleted: true, isTopLevelComment: false }
     } catch (error) {
       console.error('Error deleting comment:', error)
       return { deleted: false, isTopLevelComment: false }
@@ -655,7 +640,6 @@ export const useTweetCard = () => {
     handleReply,
     handleToggleComments,
     handleDeleteComment,
-    removeCommentFromState,
     handleCommentLike,
     handleCommentRetweet,
     handleCommentReply,

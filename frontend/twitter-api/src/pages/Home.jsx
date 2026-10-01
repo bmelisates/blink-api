@@ -1,4 +1,5 @@
-import { notifyTweetDeleted, notifyTweetInteractions } from '../services/tweetEvents'
+import { notifyTweetInteractions } from '../services/tweetEvents'
+import { deleteTweet } from '../services/deleteTweet'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import './Home.css'
@@ -193,8 +194,7 @@ function Home() {
   // Seçilen tweet'i sistemden tamamen siler
   const handleDelete = async (tweetId) => {
     try {
-      await api.delete(`/tweets/${tweetId}`)
-      notifyTweetDeleted(tweetId)
+      await deleteTweet(tweetId)
     } catch (error) {
       console.error('Error deleting tweet:', error)
     }

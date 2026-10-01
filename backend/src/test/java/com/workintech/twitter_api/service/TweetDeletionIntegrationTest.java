@@ -89,16 +89,48 @@ class TweetDeletionIntegrationTest {
         assertEquals(1, service.countByUserId(alice.getId()));
     }
 
-    @Test void deletedReplyRemainsAsPlaceholderWithItsChildren() {
+    @Test void deletedReplyDisappearsButItsChildrenRemainUnderVisibleParent() {
         var root = post("root", null, "alice");
         var reply = post("reply", root.getId(), "bob");
         var nested = post("nested", reply.getId(), "alice");
         em.flush(); em.clear();
         service.deleteTweet(reply.getId(), "bob"); em.clear();
         var children = service.findByParentTweetId(root.getId(), "alice");
-        assertEquals(1, children.size()); assertTrue(children.get(0).isDeleted());
-        assertEquals(1, children.get(0).getReplyCount());
+        assertEquals(1, children.size()); assertFalse(children.get(0).isDeleted());
+        assertEquals(nested.getId(), children.get(0).getId());
+        assertEquals(root.getId(), children.get(0).getParentTweet().getId());
+        assertEquals(1, service.findById(root.getId(), "alice").getReplyCount());
         assertEquals(nested.getId(), service.findByParentTweetId(reply.getId(), "alice").get(0).getId());
+    }
+
+    @Test void deletedLeafReplyDoesNotLeaveAPlaceholderOrCount() {
+        var root = post("root", null, "alice");
+        var reply = post("reply", root.getId(), "bob");
+        likeService.createLike(alice.getId(), new LikeRequest(reply.getId()));
+        retweetService.createRetweet(alice.getId(), new RetweetRequest(reply.getId()));
+        em.flush(); em.clear();
+        service.deleteTweet(reply.getId(), "bob"); em.clear();
+        assertTrue(service.findByParentTweetId(root.getId(), "alice").isEmpty());
+        assertEquals(0, service.findById(root.getId(), "alice").getReplyCount());
+        assertEquals(0, likes.count()); assertEquals(0, retweets.count());
+    }
+
+    @Test void multipleDeletedReplyLevelsAreSkippedWhileDeletedRootStays() {
+        var root = post("root", null, "alice");
+        var reply = post("reply", root.getId(), "bob");
+        var nested = post("nested", reply.getId(), "alice");
+        var kept = post("kept", nested.getId(), "bob");
+        em.flush(); em.clear();
+        service.deleteTweet(nested.getId(), "alice");
+        service.deleteTweet(reply.getId(), "bob");
+        service.deleteTweet(root.getId(), "alice");
+        em.clear();
+        var children = service.findByParentTweetId(root.getId(), "bob");
+        assertEquals(1, children.size());
+        assertEquals(kept.getId(), children.get(0).getId());
+        assertTrue(children.get(0).getParentTweet().isDeleted());
+        assertEquals(root.getId(), children.get(0).getParentTweet().getId());
+        assertEquals(1, service.findById(root.getId(), "bob").getReplyCount());
     }
 
     @Test void deletedPostRejectsNewInteractionsAndEditing() {

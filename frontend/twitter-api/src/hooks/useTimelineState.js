@@ -10,8 +10,8 @@ export function useTimelineState() {
 
   useEffect(() => {
     const deleted = event => {
-      setTweets(items => removeDeletedTweet(items, event.detail))
-      setRetweets(items => removeDeletedTweet(items, event.detail))
+      setTweets(items => removeDeletedTweet(items, event.detail.id, event.detail.parent))
+      setRetweets(items => removeDeletedTweet(items, event.detail.id, event.detail.parent))
     }
     window.addEventListener(TWEET_DELETED, deleted)
     const updated = event => {

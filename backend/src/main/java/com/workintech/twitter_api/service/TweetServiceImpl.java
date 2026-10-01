@@ -15,6 +15,8 @@ import com.workintech.twitter_api.dto.UserResponse;
 import com.workintech.twitter_api.entity.User;
 
 import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 @Service
 @org.springframework.transaction.annotation.Transactional(readOnly = true)
@@ -53,13 +55,18 @@ public class TweetServiceImpl implements TweetService {
             response.setUser(convertToUserResponse(tweet.getUser()));
         }
 
-        if (tweet.getParentTweet() != null) {
-            response.setParentTweet(convertToResponse(tweet.getParentTweet(), viewerUsername));
+        Tweet parent = tweet.getParentTweet();
+        // Silinen yanıtları atla; silinen ana gönderi konuşmanın yer tutucusu olarak kalır.
+        while (parent != null && parent.isDeleted() && parent.getParentTweet() != null) {
+            parent = parent.getParentTweet();
+        }
+        if (parent != null) {
+            response.setParentTweet(convertToResponse(parent, viewerUsername));
         }
 
         response.setLikeCount(tweet.getLikes() != null ? tweet.getLikes().size() : 0);
         response.setRetweetCount(tweet.getRetweets() != null ? tweet.getRetweets().size() : 0);
-        response.setReplyCount(tweet.getReplies() != null ? tweet.getReplies().size() : 0);
+        response.setReplyCount(visibleReplies(tweet).count());
         response.setLikedByCurrentUser(viewerUsername != null && tweet.getLikes().stream()
                 .anyMatch(like -> viewerUsername.equals(like.getUser().getUsername())));
         response.setRetweetedByCurrentUser(viewerUsername != null && tweet.getRetweets().stream()
@@ -196,8 +203,18 @@ public class TweetServiceImpl implements TweetService {
     public List<TweetResponse> findByParentTweetId(Long parentTweetId, String viewerUsername) {
         return tweetRepository.findByParentTweetIdOrderByCreatedAtAsc(parentTweetId)
                 .stream()
+                .flatMap(this::visibleReply)
+                .sorted(Comparator.comparing(Tweet::getCreatedAt).thenComparing(Tweet::getId))
                 .map(tweet -> convertToResponse(tweet, viewerUsername))
                 .toList();
+    }
+
+    private Stream<Tweet> visibleReplies(Tweet tweet) {
+        return tweet.getReplies().stream().flatMap(this::visibleReply);
+    }
+
+    private Stream<Tweet> visibleReply(Tweet reply) {
+        return reply.isDeleted() ? visibleReplies(reply) : Stream.of(reply);
     }
 
     // userId'ye göre tweet sayısını bulur.

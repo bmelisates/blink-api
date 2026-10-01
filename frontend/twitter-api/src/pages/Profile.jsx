@@ -8,7 +8,7 @@ import useCloseOnOutsideClick from '../hooks/useCloseOnOutsideClick'
 import { useTimelineState } from '../hooks/useTimelineState'
 import { formatRetweet } from '../utils/formatTweet'
 import { useTranslation } from '../hooks/useTranslation'
-import { notifyTweetDeleted } from '../services/tweetEvents'
+import { deleteTweet } from '../services/deleteTweet'
 
 function Profile() {
   const [user, setUser] = useState(null)
@@ -38,8 +38,7 @@ function Profile() {
 
   const handleDelete = async (tweetId) => {
     try {
-      await api.delete(`/tweets/${tweetId}`)
-      notifyTweetDeleted(tweetId)
+      await deleteTweet(tweetId)
       timeline.removeItem(tweetId)
     } catch (error) {
       console.error('Error deleting tweet:', error)
